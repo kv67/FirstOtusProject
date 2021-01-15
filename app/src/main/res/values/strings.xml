@@ -1,3 +1,9 @@
 <resources>
-    <string name="app_name">FirstProject</string>
+    <string name="app_name">Хиты видео-салонов 90х…</string>
+    <string name="film_poster">Film poster</string>
+    <string name="blood_sport">Кровавый спорт</string>
+    <string name="button_details">Детали</string>
+    <string name="cocktail">Коктейль</string>
+    <string name="commando">Коммандо</string>
+    <string name="emmanuelle">Эммануэль</string>
 </resources>
