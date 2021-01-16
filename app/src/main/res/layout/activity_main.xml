@@ -1,154 +1,181 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:context=".MainActivity">
 
-        <ImageView
-            android:id="@+id/imageViewBloodSport"
-            android:layout_width="169dp"
-            android:layout_height="229dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="@string/film_poster"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/bloodsport" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/textViewBloodSport"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/blood_sport"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toEndOf="@+id/imageViewBloodSport"
-            app:layout_constraintStart_toStartOf="@+id/imageViewBloodSport"
-            app:layout_constraintTop_toBottomOf="@+id/imageViewBloodSport" />
+            <ImageView
+                android:id="@+id/imageViewBloodSport"
+                android:layout_width="169dp"
+                android:layout_height="229dp"
+                android:layout_marginStart="8dp"
+                android:adjustViewBounds="true"
+                android:background="@color/white"
+                android:contentDescription="@string/film_poster"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/bloodsport" />
 
-        <Button
-            android:id="@+id/buttonBloodSport"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/button_details"
-            app:layout_constraintBottom_toBottomOf="@+id/textViewBloodSport"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/imageViewBloodSport"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:tag="1" />
+            <TextView
+                android:id="@+id/textViewBloodSport"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:text="@string/blood_sport"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="@+id/imageViewBloodSport"
+                app:layout_constraintStart_toStartOf="@+id/imageViewBloodSport"
+                app:layout_constraintTop_toBottomOf="@+id/imageViewBloodSport" />
 
-        <ImageView
-            android:id="@+id/imageViewCocktail"
-            android:layout_width="169dp"
-            android:layout_height="229dp"
-            android:layout_marginTop="8dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="@string/film_poster"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewBloodSport"
-            app:srcCompat="@drawable/cocktail" />
+            <Button
+                android:id="@+id/buttonBloodSport"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_details"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewBloodSport"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/imageViewBloodSport"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/textViewCocktail"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/cocktail"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toEndOf="@+id/imageViewCocktail"
-            app:layout_constraintStart_toStartOf="@+id/imageViewCocktail"
-            app:layout_constraintTop_toBottomOf="@+id/imageViewCocktail" />
+            <ImageView
+                android:id="@+id/imageViewCocktail"
+                android:layout_width="169dp"
+                android:layout_height="229dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:adjustViewBounds="true"
+                android:background="@color/white"
+                android:contentDescription="@string/film_poster"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textViewBloodSport"
+                app:srcCompat="@drawable/cocktail" />
 
-        <Button
-            android:id="@+id/buttonCocktail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/button_details"
-            app:layout_constraintBottom_toBottomOf="@+id/textViewCocktail"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/imageViewCocktail"
-            app:layout_constraintTop_toTopOf="@+id/imageViewCocktail"
-            tools:tag="2" />
+            <TextView
+                android:id="@+id/textViewCocktail"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:text="@string/cocktail"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="@+id/imageViewCocktail"
+                app:layout_constraintStart_toStartOf="@+id/imageViewCocktail"
+                app:layout_constraintTop_toBottomOf="@+id/imageViewCocktail" />
 
-        <ImageView
-            android:id="@+id/imageViewCommando"
-            android:layout_width="169dp"
-            android:layout_height="229dp"
-            android:layout_marginTop="8dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="@string/film_poster"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewCocktail"
-            app:srcCompat="@drawable/commando" />
+            <Button
+                android:id="@+id/buttonCocktail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_details"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewCocktail"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/imageViewCocktail"
+                app:layout_constraintTop_toTopOf="@+id/imageViewCocktail" />
 
-        <TextView
-            android:id="@+id/textViewCommando"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/commando"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toEndOf="@+id/imageViewCommando"
-            app:layout_constraintStart_toStartOf="@+id/imageViewCommando"
-            app:layout_constraintTop_toBottomOf="@+id/imageViewCommando" />
+            <ImageView
+                android:id="@+id/imageViewCommando"
+                android:layout_width="169dp"
+                android:layout_height="229dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:adjustViewBounds="true"
+                android:background="@color/white"
+                android:contentDescription="@string/film_poster"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textViewCocktail"
+                app:srcCompat="@drawable/commando" />
 
-        <Button
-            android:id="@+id/buttonCommando"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/button_details"
-            app:layout_constraintBottom_toBottomOf="@+id/textViewCommando"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/imageViewCommando"
-            app:layout_constraintTop_toTopOf="@+id/imageViewCommando"
-            tools:tag="3" />
+            <TextView
+                android:id="@+id/textViewCommando"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@color/white"
+                android:text="@string/commando"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="@+id/imageViewCommando"
+                app:layout_constraintStart_toStartOf="@+id/imageViewCommando"
+                app:layout_constraintTop_toBottomOf="@+id/imageViewCommando" />
 
-        <ImageView
-            android:id="@+id/imageViewEmmanuelle"
-            android:layout_width="169dp"
-            android:layout_height="229dp"
-            android:layout_marginTop="8dp"
-            android:adjustViewBounds="true"
-            android:contentDescription="@string/film_poster"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textViewCommando"
-            app:srcCompat="@drawable/emmanuelle" />
+            <Button
+                android:id="@+id/buttonCommando"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_details"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewCommando"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/imageViewCommando"
+                app:layout_constraintTop_toTopOf="@+id/imageViewCommando" />
 
-        <TextView
-            android:id="@+id/textViewEmmanuelle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/emmanuelle"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="18sp"
-            app:layout_constraintEnd_toEndOf="@+id/imageViewEmmanuelle"
-            app:layout_constraintStart_toStartOf="@+id/imageViewEmmanuelle"
-            app:layout_constraintTop_toBottomOf="@+id/imageViewEmmanuelle" />
+            <ImageView
+                android:id="@+id/imageViewEmmanuelle"
+                android:layout_width="169dp"
+                android:layout_height="229dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:adjustViewBounds="true"
+                android:background="@color/white"
+                android:contentDescription="@string/film_poster"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textViewCommando"
+                app:srcCompat="@drawable/emmanuelle" />
 
-        <Button
-            android:id="@+id/buttonEmmanuelle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/button_details"
-            app:layout_constraintBottom_toBottomOf="@+id/textViewEmmanuelle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/imageViewEmmanuelle"
-            app:layout_constraintTop_toTopOf="@+id/imageViewEmmanuelle"
-            tools:tag="4" />
+            <TextView
+                android:id="@+id/textViewEmmanuelle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:text="@string/emmanuelle"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="@+id/imageViewEmmanuelle"
+                app:layout_constraintStart_toStartOf="@+id/imageViewEmmanuelle"
+                app:layout_constraintTop_toBottomOf="@+id/imageViewEmmanuelle" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+            <Button
+                android:id="@+id/buttonEmmanuelle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_details"
+                app:layout_constraintBottom_toBottomOf="@+id/textViewEmmanuelle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/imageViewEmmanuelle"
+                app:layout_constraintTop_toTopOf="@+id/imageViewEmmanuelle" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/buSendMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:contentDescription="@string/send_message"
+        android:focusable="true"
+        android:src="@drawable/ic_baseline_email_24"
+        app:backgroundTint="@color/teal_200"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@color/white" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
