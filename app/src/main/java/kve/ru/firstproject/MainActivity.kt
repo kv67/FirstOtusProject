@@ -63,12 +63,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getSelectedData(): FilmData {
-        when (selectedFilm) {
-            BLOOD_SPORT -> return bloodSportData
-            COCKTAIL -> return cocktailData
-            COMMANDO -> return commandoData
-            EMMANUELLE -> return emmanuelleData
-            else -> return FilmData(0, "", false)
+        return when (selectedFilm) {
+            BLOOD_SPORT -> bloodSportData
+            COCKTAIL -> cocktailData
+            COMMANDO -> commandoData
+            EMMANUELLE -> emmanuelleData
+            else -> FilmData(0, "", false)
         }
     }
 
