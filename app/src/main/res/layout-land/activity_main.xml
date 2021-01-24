@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -20,9 +21,10 @@
 
             <ImageView
                 android:id="@+id/imageViewBloodSport"
-                android:layout_width="169dp"
-                android:layout_height="229dp"
+                android:layout_width="269dp"
+                android:layout_height="329dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
                 android:adjustViewBounds="true"
                 android:background="@color/white"
                 android:contentDescription="@string/film_poster"
@@ -39,7 +41,8 @@
                 android:textAlignment="center"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="@+id/imageViewBloodSport"
+                app:layout_constraintBottom_toBottomOf="@+id/buttonBloodSport"
+                app:layout_constraintEnd_toStartOf="@+id/buttonBloodSport"
                 app:layout_constraintStart_toStartOf="@+id/imageViewBloodSport"
                 app:layout_constraintTop_toBottomOf="@+id/imageViewBloodSport" />
 
@@ -48,22 +51,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/button_details"
-                app:layout_constraintBottom_toBottomOf="@+id/textViewBloodSport"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/imageViewBloodSport"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintEnd_toEndOf="@+id/imageViewBloodSport"
+                app:layout_constraintTop_toBottomOf="@+id/imageViewBloodSport" />
 
             <ImageView
                 android:id="@+id/imageViewCocktail"
-                android:layout_width="169dp"
-                android:layout_height="229dp"
+                android:layout_width="269dp"
+                android:layout_height="329dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:adjustViewBounds="true"
                 android:background="@color/white"
                 android:contentDescription="@string/film_poster"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textViewBloodSport"
+                app:layout_constraintStart_toEndOf="@+id/imageViewBloodSport"
+                app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/cocktail" />
 
             <TextView
@@ -75,68 +76,65 @@
                 android:textAlignment="center"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="@+id/imageViewCocktail"
+                app:layout_constraintBottom_toBottomOf="@+id/buttonCocktail"
+                app:layout_constraintEnd_toStartOf="@+id/buttonCocktail"
                 app:layout_constraintStart_toStartOf="@+id/imageViewCocktail"
-                app:layout_constraintTop_toBottomOf="@+id/imageViewCocktail" />
+                app:layout_constraintTop_toTopOf="@+id/buttonCocktail" />
 
             <Button
                 android:id="@+id/buttonCocktail"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/button_details"
-                app:layout_constraintBottom_toBottomOf="@+id/textViewCocktail"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/imageViewCocktail"
-                app:layout_constraintTop_toTopOf="@+id/imageViewCocktail" />
+                app:layout_constraintEnd_toEndOf="@+id/imageViewCocktail"
+                app:layout_constraintTop_toBottomOf="@+id/imageViewCocktail" />
 
             <ImageView
                 android:id="@+id/imageViewCommando"
-                android:layout_width="169dp"
-                android:layout_height="229dp"
+                android:layout_width="269dp"
+                android:layout_height="329dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:adjustViewBounds="true"
                 android:background="@color/white"
                 android:contentDescription="@string/film_poster"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textViewCocktail"
+                app:layout_constraintTop_toBottomOf="@+id/buttonBloodSport"
                 app:srcCompat="@drawable/commando" />
 
             <TextView
                 android:id="@+id/textViewCommando"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:background="@color/white"
                 android:text="@string/commando"
                 android:textAlignment="center"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="@+id/imageViewCommando"
+                app:layout_constraintBottom_toBottomOf="@+id/buttonCommando"
+                app:layout_constraintEnd_toStartOf="@+id/buttonCommando"
                 app:layout_constraintStart_toStartOf="@+id/imageViewCommando"
-                app:layout_constraintTop_toBottomOf="@+id/imageViewCommando" />
+                app:layout_constraintTop_toTopOf="@+id/buttonCommando" />
 
             <Button
                 android:id="@+id/buttonCommando"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/button_details"
-                app:layout_constraintBottom_toBottomOf="@+id/textViewCommando"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/imageViewCommando"
-                app:layout_constraintTop_toTopOf="@+id/imageViewCommando" />
+                app:layout_constraintEnd_toEndOf="@+id/imageViewCommando"
+                app:layout_constraintTop_toBottomOf="@+id/imageViewCommando" />
 
             <ImageView
                 android:id="@+id/imageViewEmmanuelle"
-                android:layout_width="169dp"
-                android:layout_height="229dp"
+                android:layout_width="269dp"
+                android:layout_height="329dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:adjustViewBounds="true"
                 android:background="@color/white"
                 android:contentDescription="@string/film_poster"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textViewCommando"
+                app:layout_constraintStart_toEndOf="@+id/imageViewCommando"
+                app:layout_constraintTop_toBottomOf="@+id/buttonCocktail"
                 app:srcCompat="@drawable/emmanuelle" />
 
             <TextView
@@ -148,19 +146,18 @@
                 android:textAlignment="center"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="@+id/imageViewEmmanuelle"
+                app:layout_constraintBottom_toBottomOf="@+id/buttonEmmanuelle"
+                app:layout_constraintEnd_toStartOf="@+id/buttonEmmanuelle"
                 app:layout_constraintStart_toStartOf="@+id/imageViewEmmanuelle"
-                app:layout_constraintTop_toBottomOf="@+id/imageViewEmmanuelle" />
+                app:layout_constraintTop_toTopOf="@+id/buttonEmmanuelle" />
 
             <Button
                 android:id="@+id/buttonEmmanuelle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/button_details"
-                app:layout_constraintBottom_toBottomOf="@+id/textViewEmmanuelle"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/imageViewEmmanuelle"
-                app:layout_constraintTop_toTopOf="@+id/imageViewEmmanuelle" />
+                app:layout_constraintEnd_toEndOf="@+id/imageViewEmmanuelle"
+                app:layout_constraintTop_toBottomOf="@+id/imageViewEmmanuelle" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

@@ -1,6 +1,10 @@
 package kve.ru.firstproject
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.DialogInterface
+import android.content.DialogInterface.BUTTON_NEGATIVE
+import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -19,6 +23,7 @@ class MainActivity : AppCompatActivity() {
         const val LOG_TAG = "REQUEST_RESULT"
         const val REQUEST_CODE_EDIT_PROFILE = 1
         const val SELECTED = "SELECTED"
+        const val FILMS = "FILMS"
         const val BLOOD_SPORT = 1
         const val COCKTAIL = 2
         const val COMMANDO = 3
@@ -33,10 +38,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var selectedFilm = 0
-    private var bloodSportData = FilmData(BLOOD_SPORT, "", false)
-    private var cocktailData = FilmData(COCKTAIL, "", false)
-    private var commandoData = FilmData(COMMANDO, "", false)
-    private var emmanuelleData = FilmData(EMMANUELLE, "", false)
+    private var films = ArrayList<FilmData>()
     private val imageViewBloodSport by lazy {
         findViewById<ImageView>(R.id.imageViewBloodSport)
     }
@@ -63,12 +65,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getSelectedData(): FilmData {
-        return when (selectedFilm) {
-            BLOOD_SPORT -> bloodSportData
-            COCKTAIL -> cocktailData
-            COMMANDO -> commandoData
-            EMMANUELLE -> emmanuelleData
-            else -> FilmData(0, "", false)
+        return if (selectedFilm in 1..EMMANUELLE) {
+            films[selectedFilm - 1]
+        } else {
+            FilmData(0, "Empty film", "", 0, "", false)
         }
     }
 
@@ -156,8 +156,37 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        films.add(
+            FilmData(
+                BLOOD_SPORT, getString(R.string.blood_sport),
+                getString(R.string.blood_sport_dsc), R.drawable.bloodsport, "", false
+            )
+        )
+        films.add(
+            FilmData(
+                COCKTAIL, getString(R.string.cocktail),
+                getString(R.string.cocktail_dsc), R.drawable.cocktail, "", false
+            )
+        )
+        films.add(
+            FilmData(
+                COMMANDO, getString(R.string.commando),
+                getString(R.string.commando_dsc), R.drawable.commando, "", false
+            )
+        )
+        films.add(
+            FilmData(
+                EMMANUELLE, getString(R.string.emmanuelle),
+                getString(R.string.emmanuelle_dsc), R.drawable.emmanuelle, "", false
+            )
+        )
+
         savedInstanceState?.getInt(SELECTED)?.let {
             setSelection(it)
+        }
+
+        savedInstanceState?.getParcelable<FilmList>(FILMS)?.let {
+            films = it.films
         }
 
         findViewById<View>(R.id.buttonBloodSport).setOnClickListener {
@@ -185,9 +214,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        val bld: AlertDialog.Builder = AlertDialog.Builder(this)
+        val lst =
+            DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                when (which) {
+                    BUTTON_NEGATIVE -> dialog.dismiss()
+                    BUTTON_POSITIVE -> super.onBackPressed()
+                }
+            }
+        bld.setMessage(getString(R.string.ask_exit_conform))
+        bld.setTitle(getString(R.string.exit_title))
+        bld.setNegativeButton(getString(R.string.negative_button), lst)
+        bld.setPositiveButton(getString(R.string.positive_button), lst)
+        val dialog: AlertDialog = bld.create()
+        dialog.show()
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(SELECTED, selectedFilm)
+        outState.putParcelable(FILMS, FilmList(films))
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -196,11 +243,8 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == REQUEST_CODE_EDIT_PROFILE && resultCode == RESULT_OK) {
             val filmData = data?.getParcelableExtra<FilmData>(EXTRA_DATA)
             filmData?.let {
-                when (it.id) {
-                    BLOOD_SPORT -> bloodSportData = it
-                    COCKTAIL -> cocktailData = it
-                    COMMANDO -> commandoData= it
-                    EMMANUELLE -> emmanuelleData = it
+                if (it.id in 1..EMMANUELLE) {
+                    films[it.id - 1] = it
                 }
                 Log.d(
                     LOG_TAG,
