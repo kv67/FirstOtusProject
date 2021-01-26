@@ -7,22 +7,20 @@ import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.Intent
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.res.ResourcesCompat
-import androidx.core.graphics.drawable.toDrawable
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kve.ru.firstproject.SecondActivity.Companion.EXTRA_DATA
+import kve.ru.firstproject.adapter.FilmAdapter
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
         const val LOG_TAG = "REQUEST_RESULT"
         const val REQUEST_CODE_EDIT_PROFILE = 1
-        const val SELECTED = "SELECTED"
         const val FILMS = "FILMS"
         const val BLOOD_SPORT = 1
         const val COCKTAIL = 2
@@ -37,174 +35,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private var selectedFilm = 0
-    private var films = ArrayList<FilmData>()
-    private val imageViewBloodSport by lazy {
-        findViewById<ImageView>(R.id.imageViewBloodSport)
-    }
-    private val textViewBloodSport by lazy {
-        findViewById<TextView>(R.id.textViewBloodSport)
-    }
-    private val imageViewCocktail by lazy {
-        findViewById<ImageView>(R.id.imageViewCocktail)
-    }
-    private val textViewCocktail by lazy {
-        findViewById<TextView>(R.id.textViewCocktail)
-    }
-    private val imageViewCommando by lazy {
-        findViewById<ImageView>(R.id.imageViewCommando)
-    }
-    private val textViewCommando by lazy {
-        findViewById<TextView>(R.id.textViewCommando)
-    }
-    private val imageViewEmmanuelle by lazy {
-        findViewById<ImageView>(R.id.imageViewEmmanuelle)
-    }
-    private val textViewEmmanuelle by lazy {
-        findViewById<TextView>(R.id.textViewEmmanuelle)
-    }
-
-    private fun getSelectedData(): FilmData {
-        return if (selectedFilm in 1..EMMANUELLE) {
-            films[selectedFilm - 1]
-        } else {
-            FilmData(0, "Empty film", "", 0, "", false)
-        }
-    }
-
-    private fun setSelection(selectedId: Int) {
-        selectedFilm = selectedId
-
-        imageViewBloodSport.background =
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == BLOOD_SPORT) R.color.purple_200 else R.color.white, null
-            )
-                .toDrawable()
-        textViewBloodSport.background =
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == BLOOD_SPORT) R.color.purple_200 else R.color.white, null
-            )
-                .toDrawable()
-        textViewBloodSport.setTextColor(
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == BLOOD_SPORT) R.color.purple_700 else R.color.black, null
-            )
-        )
-
-        imageViewCocktail.background =
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == COCKTAIL) R.color.purple_200 else R.color.white, null
-            )
-                .toDrawable()
-        textViewCocktail.background =
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == COCKTAIL) R.color.purple_200 else R.color.white, null
-            )
-                .toDrawable()
-        textViewCocktail.setTextColor(
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == COCKTAIL) R.color.purple_700 else R.color.black, null
-            )
-        )
-
-        imageViewCommando.background =
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == COMMANDO) R.color.purple_200 else R.color.white, null
-            )
-                .toDrawable()
-        textViewCommando.background =
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == COMMANDO) R.color.purple_200 else R.color.white, null
-            )
-                .toDrawable()
-        textViewCommando.setTextColor(
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == COMMANDO) R.color.purple_700 else R.color.black, null
-            )
-        )
-
-        imageViewEmmanuelle.background =
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == EMMANUELLE) R.color.purple_200 else R.color.white, null
-            )
-                .toDrawable()
-        textViewEmmanuelle.background =
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == EMMANUELLE) R.color.purple_200 else R.color.white, null
-            )
-                .toDrawable()
-        textViewEmmanuelle.setTextColor(
-            ResourcesCompat.getColor(
-                resources,
-                if (selectedId == EMMANUELLE) R.color.purple_700 else R.color.black, null
-            )
-        )
+    private lateinit var films: MutableList<FilmData>
+    private val recyclerViewFilms by lazy {
+        findViewById<RecyclerView>(R.id.recyclerViewFilms)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_main_new)
 
-        films.add(
-            FilmData(
-                BLOOD_SPORT, getString(R.string.blood_sport),
-                getString(R.string.blood_sport_dsc), R.drawable.bloodsport, "", false
-            )
-        )
-        films.add(
-            FilmData(
-                COCKTAIL, getString(R.string.cocktail),
-                getString(R.string.cocktail_dsc), R.drawable.cocktail, "", false
-            )
-        )
-        films.add(
-            FilmData(
-                COMMANDO, getString(R.string.commando),
-                getString(R.string.commando_dsc), R.drawable.commando, "", false
-            )
-        )
-        films.add(
-            FilmData(
-                EMMANUELLE, getString(R.string.emmanuelle),
-                getString(R.string.emmanuelle_dsc), R.drawable.emmanuelle, "", false
-            )
-        )
-
-        savedInstanceState?.getInt(SELECTED)?.let {
-            setSelection(it)
-        }
-
-        savedInstanceState?.getParcelable<FilmList>(FILMS)?.let {
-            films = it.films
-        }
-
-        findViewById<View>(R.id.buttonBloodSport).setOnClickListener {
-            setSelection(BLOOD_SPORT)
-            launchActivity(this, getSelectedData())
-        }
-        findViewById<View>(R.id.buttonCocktail).setOnClickListener {
-            setSelection(COCKTAIL)
-            launchActivity(this, getSelectedData())
-        }
-        findViewById<View>(R.id.buttonCommando).setOnClickListener {
-            setSelection(COMMANDO)
-            launchActivity(this, getSelectedData())
-        }
-        findViewById<View>(R.id.buttonEmmanuelle).setOnClickListener {
-            setSelection(EMMANUELLE)
-            launchActivity(this, getSelectedData())
-        }
         findViewById<View>(R.id.buSendMessage).setOnClickListener {
             Intent(Intent.ACTION_SEND).apply {
                 this.type = "*/*"
@@ -212,6 +51,57 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent.createChooser(this, null))
             }
         }
+
+        savedInstanceState?.getParcelable<FilmList>(FILMS)?.let {
+            films = it.films
+        } ?: run {
+            initData()
+        }
+
+        initRecyclerView()
+    }
+
+    private fun getColumnCount(): Int {
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val width: Int = (displayMetrics.widthPixels / displayMetrics.density).toInt()
+        return if (width / 185 > 2) width / 185 else 2
+    }
+
+    private fun initData() {
+        films = mutableListOf(
+            FilmData(
+                BLOOD_SPORT, getString(R.string.blood_sport),
+                getString(R.string.blood_sport_dsc), R.drawable.bloodsport, "", false
+            ),
+            FilmData(
+                COCKTAIL, getString(R.string.cocktail),
+                getString(R.string.cocktail_dsc), R.drawable.cocktail, "", false
+            ),
+            FilmData(
+                COMMANDO, getString(R.string.commando),
+                getString(R.string.commando_dsc), R.drawable.commando, "", false
+            ),
+            FilmData(
+                EMMANUELLE, getString(R.string.emmanuelle),
+                getString(R.string.emmanuelle_dsc), R.drawable.emmanuelle, "", false
+            )
+        )
+    }
+
+    private fun initRecyclerView() {
+        val adapter = FilmAdapter(films, object : FilmAdapter.OnFilmClickListener {
+            override fun onFilmClick(position: Int) {
+                launchActivity(this@MainActivity, films[position])
+            }
+
+            override fun onStarClick(position: Int) {
+                TODO("Not yet implemented")
+            }
+
+        })
+        recyclerViewFilms.layoutManager = GridLayoutManager(this, getColumnCount())
+        recyclerViewFilms.adapter = adapter
     }
 
     override fun onBackPressed() {
@@ -233,7 +123,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putInt(SELECTED, selectedFilm)
         outState.putParcelable(FILMS, FilmList(films))
     }
 
@@ -245,16 +134,12 @@ class MainActivity : AppCompatActivity() {
             filmData?.let {
                 if (it.id in 1..EMMANUELLE) {
                     films[it.id - 1] = it
+                    recyclerViewFilms.adapter?.notifyItemChanged(it.id - 1)
                 }
                 Log.d(
                     LOG_TAG,
                     "Фильм ${if (it.isOK) "" else "не "}понравился, комментарий: ${it.comment}"
                 )
-                Toast.makeText(
-                    this,
-                    "Фильм ${if (it.isOK) "" else "не "}понравился, комментарий: ${it.comment}",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
         }
     }
