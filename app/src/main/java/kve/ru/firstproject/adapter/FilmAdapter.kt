@@ -5,9 +5,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.recyclerview.widget.RecyclerView
-import kve.ru.firstproject.FilmData
 import kve.ru.firstproject.R
+import kve.ru.firstproject.data.FilmData
 
 class FilmAdapter(private val dataList: MutableList<FilmData>, val listener: OnFilmClickListener) :
     RecyclerView.Adapter<FilmAdapter.FilmViewHolder>() {
@@ -33,16 +35,35 @@ class FilmAdapter(private val dataList: MutableList<FilmData>, val listener: OnF
     inner class FilmViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val imageViewPoster = itemView.findViewById<ImageView>(R.id.imageViewPoster)
         private val textViewName = itemView.findViewById<TextView>(R.id.textViewName)
+        private val imageViewStar = itemView.findViewById<ImageView>(R.id.imageViewStar)
 
         init {
             imageViewPoster.setOnClickListener {
                 listener.onFilmClick(adapterPosition)
             }
+            imageViewStar.setOnClickListener {
+                listener.onStarClick(adapterPosition)
+            }
         }
 
         fun bind(film: FilmData) {
             imageViewPoster.setImageResource(film.img)
+            imageViewPoster.background =
+                ResourcesCompat.getColor(
+                    itemView.resources,
+                    if (film.selected) R.color.purple_200 else R.color.white, null
+                )
+                    .toDrawable()
             textViewName.text = film.name
+            textViewName.background =
+                ResourcesCompat.getColor(
+                    itemView.resources,
+                    if (film.selected) R.color.purple_200 else R.color.white, null
+                )
+                    .toDrawable()
+            imageViewStar.setImageResource(
+                if (film.isFavorite) R.drawable.star_gold else R.drawable.star_silver
+            )
         }
     }
 

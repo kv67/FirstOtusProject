@@ -7,11 +7,15 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import kve.ru.firstproject.data.FilmData
 
 
 class SecondActivity : AppCompatActivity() {
 
-    private var currentFilm = FilmData(0, "Empty film", "", 0, "", false)
+    private var currentFilm = FilmData(
+        0, "Empty film", "", 0, "",
+        false, false, false
+    )
 
     companion object {
         const val EXTRA_DATA = "EXTRA_DATA"

@@ -9,19 +9,26 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kve.ru.firstproject.SecondActivity.Companion.EXTRA_DATA
 import kve.ru.firstproject.adapter.FilmAdapter
+import kve.ru.firstproject.data.FavoriteList
+import kve.ru.firstproject.data.FilmData
+import kve.ru.firstproject.data.FilmList
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        const val LOG_TAG = "REQUEST_RESULT"
+        const val LOG_TAG = "FILMS_RESULT"
         const val REQUEST_CODE_EDIT_PROFILE = 1
+        const val REQUEST_CODE_EDIT_FAVORITES = 2
         const val FILMS = "FILMS"
+        const val FAVORITES = "FAVORITES"
         const val BLOOD_SPORT = 1
         const val COCKTAIL = 2
         const val COMMANDO = 3
@@ -33,9 +40,17 @@ class MainActivity : AppCompatActivity() {
                 activity.startActivityForResult(this, REQUEST_CODE_EDIT_PROFILE)
             }
         }
+
+        fun launchFavoriteActivity(activity: Activity, favorites: MutableList<FilmData>) {
+            Intent(activity, FavoriteActivity::class.java).apply {
+                putExtra(FAVORITES, FavoriteList(favorites))
+                activity.startActivityForResult(this, REQUEST_CODE_EDIT_FAVORITES)
+            }
+        }
     }
 
     private lateinit var films: MutableList<FilmData>
+    private var favorites = ArrayList<FilmData>()
     private val recyclerViewFilms by lazy {
         findViewById<RecyclerView>(R.id.recyclerViewFilms)
     }
@@ -57,6 +72,11 @@ class MainActivity : AppCompatActivity() {
         } ?: run {
             initData()
         }
+        savedInstanceState?.getParcelable<FavoriteList>(FAVORITES)?.let {
+            favorites = it.favorites as ArrayList<FilmData>
+        } ?: run {
+            initData()
+        }
 
         initRecyclerView()
     }
@@ -72,19 +92,23 @@ class MainActivity : AppCompatActivity() {
         films = mutableListOf(
             FilmData(
                 BLOOD_SPORT, getString(R.string.blood_sport),
-                getString(R.string.blood_sport_dsc), R.drawable.bloodsport, "", false
+                getString(R.string.blood_sport_dsc), R.drawable.bloodsport,
+                "", isOK = false, selected = false, isFavorite = false
             ),
             FilmData(
                 COCKTAIL, getString(R.string.cocktail),
-                getString(R.string.cocktail_dsc), R.drawable.cocktail, "", false
+                getString(R.string.cocktail_dsc), R.drawable.cocktail,
+                "", isOK = false, selected = false, isFavorite = false
             ),
             FilmData(
                 COMMANDO, getString(R.string.commando),
-                getString(R.string.commando_dsc), R.drawable.commando, "", false
+                getString(R.string.commando_dsc), R.drawable.commando,
+                "", isOK = false, selected = false, isFavorite = false
             ),
             FilmData(
                 EMMANUELLE, getString(R.string.emmanuelle),
-                getString(R.string.emmanuelle_dsc), R.drawable.emmanuelle, "", false
+                getString(R.string.emmanuelle_dsc), R.drawable.emmanuelle,
+                "", isOK = false, selected = false, isFavorite = false
             )
         )
     }
@@ -92,11 +116,33 @@ class MainActivity : AppCompatActivity() {
     private fun initRecyclerView() {
         val adapter = FilmAdapter(films, object : FilmAdapter.OnFilmClickListener {
             override fun onFilmClick(position: Int) {
+                films.find { it.selected }?.let {
+                    it.selected = false
+                    recyclerViewFilms.adapter?.notifyItemChanged(films.indexOf(it))
+                }
+                films[position].selected = true
+                recyclerViewFilms.adapter?.notifyItemChanged(position)
                 launchActivity(this@MainActivity, films[position])
             }
 
             override fun onStarClick(position: Int) {
-                TODO("Not yet implemented")
+                if (films[position].isFavorite) {
+                    favorites.find { films[position].id == it.id }?.let {
+                        favorites.remove(it)
+                    }
+                } else if (!films[position].isFavorite) {  //  && !favorites.contains(films[position])
+                    favorites.find { films[position].id == it.id }?.let {
+                        Log.d(
+                            LOG_TAG,
+                            "Film with id: ${films[position].id} is already in favorites"
+                        )
+                    } ?: run {
+                        favorites.add(films[position])
+                    }
+                }
+                films[position].isFavorite = !films[position].isFavorite
+                recyclerViewFilms.adapter?.notifyItemChanged(position)
+                Log.d(LOG_TAG, "Size of favorites: ${favorites.size}")
             }
 
         })
@@ -121,9 +167,22 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.menuFavourite) {
+            launchFavoriteActivity(this, favorites)
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putParcelable(FILMS, FilmList(films))
+        outState.putParcelable(FAVORITES, FavoriteList(favorites))
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -140,6 +199,21 @@ class MainActivity : AppCompatActivity() {
                     LOG_TAG,
                     "Фильм ${if (it.isOK) "" else "не "}понравился, комментарий: ${it.comment}"
                 )
+            }
+        }
+
+        if (requestCode == REQUEST_CODE_EDIT_FAVORITES && resultCode == RESULT_OK) {
+            val newFavorites = data?.getParcelableExtra<FavoriteList>(FAVORITES)
+            newFavorites?.let { obj ->
+                favorites = obj.favorites as ArrayList<FilmData>
+                for (film: FilmData in films) {
+                    favorites.find { it.id == film.id }?.let {
+                        film.isFavorite = true
+                    } ?: run {
+                        film.isFavorite = false
+                    }
+                }
+                recyclerViewFilms.adapter?.notifyDataSetChanged()
             }
         }
     }

@@ -36,4 +36,15 @@
         app:layout_constraintTop_toBottomOf="@+id/imageViewPoster"
         tools:text="@tools:sample/first_names" />
 
+    <ImageView
+        android:id="@+id/imageViewStar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:contentDescription="@string/star_tag"
+        app:layout_constraintBottom_toBottomOf="@+id/imageViewPoster"
+        app:layout_constraintEnd_toEndOf="@+id/imageViewPoster"
+        app:srcCompat="@drawable/star_silver" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
