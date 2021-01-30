@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.recyclerview.widget.RecyclerView
+import kve.ru.firstproject.MainActivity.Companion.getFilmPoster
 import kve.ru.firstproject.R
 import kve.ru.firstproject.data.FilmData
 
@@ -47,7 +48,7 @@ class FilmAdapter(private val dataList: MutableList<FilmData>, val listener: OnF
         }
 
         fun bind(film: FilmData) {
-            imageViewPoster.setImageResource(film.img)
+            imageViewPoster.setImageBitmap(getFilmPoster(film.id))
             imageViewPoster.background =
                 ResourcesCompat.getColor(
                     itemView.resources,

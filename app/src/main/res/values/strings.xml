@@ -20,4 +20,6 @@
     <string name="positive_button">YES</string>
     <string name="star_tag">\"Star\" tag</string>
     <string name="favorites">Favorites</string>
+    <string name="favorite_remove_conform">Are you sure to remove from Favorites?</string>
+    <string name="favorites_removing_title">Removing</string>
 </resources>

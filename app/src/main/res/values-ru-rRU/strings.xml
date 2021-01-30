@@ -21,4 +21,6 @@
     <string name="positive_button">ДА</string>
     <string name="star_tag">Метка \"Звезда\"</string>
     <string name="favorites">Избранное</string>
+    <string name="favorite_remove_conform">"Удалить из Избранного? "</string>
+    <string name="favorites_removing_title">Удаление</string>
 </resources>

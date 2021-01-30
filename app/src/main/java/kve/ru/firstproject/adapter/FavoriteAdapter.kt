@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.R
 import kve.ru.firstproject.data.FilmData
 
@@ -36,7 +37,7 @@ class FavoriteAdapter(private val dataList: MutableList<FilmData>) :
         }
 
         fun bind(film: FilmData) {
-            imageViewPoster.setImageResource(film.img)
+            imageViewPoster.setImageBitmap(MainActivity.getFilmPoster(film.id))
             textViewName.text = film.name
         }
     }

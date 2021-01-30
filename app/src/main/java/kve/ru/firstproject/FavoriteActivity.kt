@@ -1,16 +1,18 @@
 package kve.ru.firstproject
 
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.*
 import android.os.Bundle
 import android.util.DisplayMetrics
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import kve.ru.firstproject.MainActivity.Companion.FAVORITES
 import kve.ru.firstproject.adapter.FavoriteAdapter
 import kve.ru.firstproject.data.FavoriteList
 import kve.ru.firstproject.data.FilmData
+import kve.ru.firstproject.utils.FavoriteItemDecoration
 
 class FavoriteActivity : AppCompatActivity() {
 
@@ -42,6 +44,8 @@ class FavoriteActivity : AppCompatActivity() {
         val adapter = FavoriteAdapter(favorites)
         recyclerViewFilms.layoutManager = GridLayoutManager(this, getColumnCount())
         recyclerViewFilms.adapter = adapter
+        val decorator = FavoriteItemDecoration(applicationContext, 0)
+        recyclerViewFilms.addItemDecoration(decorator)
     }
 
     private fun initTouchHelper() {
@@ -59,8 +63,28 @@ class FavoriteActivity : AppCompatActivity() {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
-                favorites.removeAt(position)
-                recyclerViewFilms.adapter?.notifyItemRemoved(position)
+
+                val bld: AlertDialog.Builder = AlertDialog.Builder(this@FavoriteActivity)
+                val lst =
+                    DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                        when (which) {
+                            DialogInterface.BUTTON_NEGATIVE -> {
+                                recyclerViewFilms.adapter?.notifyDataSetChanged()
+                                dialog.dismiss()
+                            }
+                            DialogInterface.BUTTON_POSITIVE -> {
+                                favorites.removeAt(position)
+                                recyclerViewFilms.adapter?.notifyItemRemoved(position)
+                                dialog.dismiss()
+                            }
+                        }
+                    }
+                bld.setMessage(getString(R.string.favorite_remove_conform))
+                bld.setTitle(getString(R.string.favorites_removing_title))
+                bld.setNegativeButton(getString(R.string.negative_button), lst)
+                bld.setPositiveButton(getString(R.string.positive_button), lst)
+                val dialog: AlertDialog = bld.create()
+                dialog.show()
             }
         })
 
@@ -73,4 +97,5 @@ class FavoriteActivity : AppCompatActivity() {
         setResult(RESULT_OK, resultIntent)
         super.finish()
     }
+
 }

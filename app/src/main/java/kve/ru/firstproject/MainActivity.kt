@@ -6,6 +6,9 @@ import android.content.DialogInterface
 import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.ThumbnailUtils
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
@@ -20,6 +23,7 @@ import kve.ru.firstproject.adapter.FilmAdapter
 import kve.ru.firstproject.data.FavoriteList
 import kve.ru.firstproject.data.FilmData
 import kve.ru.firstproject.data.FilmList
+import kve.ru.firstproject.utils.FavoriteItemDecoration
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,6 +38,11 @@ class MainActivity : AppCompatActivity() {
         const val COMMANDO = 3
         const val EMMANUELLE = 4
 
+        private lateinit var BLOOD_SPORT_BMP: Bitmap
+        private lateinit var COCKTAIL_BMP: Bitmap
+        private lateinit var COMMANDO_BMP: Bitmap
+        private lateinit var EMMANUELLE_BMP: Bitmap
+
         fun launchActivity(activity: Activity, selectedData: FilmData) {
             Intent(activity, SecondActivity::class.java).apply {
                 putExtra(EXTRA_DATA, selectedData)
@@ -47,6 +56,16 @@ class MainActivity : AppCompatActivity() {
                 activity.startActivityForResult(this, REQUEST_CODE_EDIT_FAVORITES)
             }
         }
+
+        fun getFilmPoster(id: Int): Bitmap? {
+            return when (id) {
+                BLOOD_SPORT -> BLOOD_SPORT_BMP
+                COCKTAIL -> COCKTAIL_BMP
+                COMMANDO -> COMMANDO_BMP
+                EMMANUELLE -> EMMANUELLE_BMP
+                else -> null
+            }
+        }
     }
 
     private lateinit var films: MutableList<FilmData>
@@ -57,7 +76,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main_new)
+        setContentView(R.layout.activity_main)
 
         findViewById<View>(R.id.buSendMessage).setOnClickListener {
             Intent(Intent.ACTION_SEND).apply {
@@ -89,6 +108,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initData() {
+        var bitmap = BitmapFactory.decodeResource(resources, R.drawable.bloodsport)
+        BLOOD_SPORT_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
+        bitmap = BitmapFactory.decodeResource(resources, R.drawable.cocktail)
+        COCKTAIL_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
+        bitmap = BitmapFactory.decodeResource(resources, R.drawable.commando)
+        COMMANDO_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
+        bitmap = BitmapFactory.decodeResource(resources, R.drawable.emmanuelle)
+        EMMANUELLE_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
+
         films = mutableListOf(
             FilmData(
                 BLOOD_SPORT, getString(R.string.blood_sport),
@@ -130,7 +158,7 @@ class MainActivity : AppCompatActivity() {
                     favorites.find { films[position].id == it.id }?.let {
                         favorites.remove(it)
                     }
-                } else if (!films[position].isFavorite) {  //  && !favorites.contains(films[position])
+                } else {
                     favorites.find { films[position].id == it.id }?.let {
                         Log.d(
                             LOG_TAG,
@@ -142,12 +170,13 @@ class MainActivity : AppCompatActivity() {
                 }
                 films[position].isFavorite = !films[position].isFavorite
                 recyclerViewFilms.adapter?.notifyItemChanged(position)
-                Log.d(LOG_TAG, "Size of favorites: ${favorites.size}")
             }
 
         })
         recyclerViewFilms.layoutManager = GridLayoutManager(this, getColumnCount())
         recyclerViewFilms.adapter = adapter
+        val decorator = FavoriteItemDecoration(applicationContext, 15)
+        recyclerViewFilms.addItemDecoration(decorator)
     }
 
     override fun onBackPressed() {
@@ -173,10 +202,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.menuFavourite) {
-            launchFavoriteActivity(this, favorites)
+        return when (item.itemId) {
+            R.id.menuFavourite -> {
+                launchFavoriteActivity(this, favorites)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
-        return super.onOptionsItemSelected(item)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
