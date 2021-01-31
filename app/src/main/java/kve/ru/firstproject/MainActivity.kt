@@ -24,15 +24,17 @@ import kve.ru.firstproject.data.FavoriteList
 import kve.ru.firstproject.data.FilmData
 import kve.ru.firstproject.data.FilmList
 import kve.ru.firstproject.utils.FavoriteItemDecoration
+import kve.ru.firstproject.utils.FilmsItemAnimator
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
         const val LOG_TAG = "FILMS_RESULT"
-        const val REQUEST_CODE_EDIT_PROFILE = 1
-        const val REQUEST_CODE_EDIT_FAVORITES = 2
         const val FILMS = "FILMS"
         const val FAVORITES = "FAVORITES"
+        const val STAR_ANIMATE = "STAR_ANIMATE"
+        const val REQUEST_CODE_EDIT_PROFILE = 1
+        const val REQUEST_CODE_EDIT_FAVORITES = 2
         const val BLOOD_SPORT = 1
         const val COCKTAIL = 2
         const val COMMANDO = 3
@@ -169,14 +171,16 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 films[position].isFavorite = !films[position].isFavorite
-                recyclerViewFilms.adapter?.notifyItemChanged(position)
+                recyclerViewFilms.adapter?.notifyItemChanged(position, STAR_ANIMATE)
             }
-
         })
-        recyclerViewFilms.layoutManager = GridLayoutManager(this, getColumnCount())
-        recyclerViewFilms.adapter = adapter
-        val decorator = FavoriteItemDecoration(applicationContext, 15)
-        recyclerViewFilms.addItemDecoration(decorator)
+
+        recyclerViewFilms.apply {
+            layoutManager = GridLayoutManager(this.context, getColumnCount())
+            this.adapter = adapter
+            recyclerViewFilms.addItemDecoration(FavoriteItemDecoration(applicationContext, 15))
+            itemAnimator = FilmsItemAnimator()
+        }
     }
 
     override fun onBackPressed() {
