@@ -12,7 +12,9 @@ import kve.ru.firstproject.MainActivity.Companion.getFilmPoster
 import kve.ru.firstproject.R
 import kve.ru.firstproject.data.FilmData
 
-class FilmAdapter(private val dataList: MutableList<FilmData>, val listener: OnFilmClickListener) :
+class FilmAdapter(
+    private val dataList: MutableList<FilmData>,
+    private val listener: OnFilmClickListener?) :
     RecyclerView.Adapter<FilmAdapter.FilmViewHolder>() {
 
     interface OnFilmClickListener {
@@ -36,22 +38,20 @@ class FilmAdapter(private val dataList: MutableList<FilmData>, val listener: OnF
     inner class FilmViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val imageViewPoster = itemView.findViewById<ImageView>(R.id.imageViewPoster)
         private val textViewName = itemView.findViewById<TextView>(R.id.textViewName)
-        private lateinit var currentFilm: FilmData
         val imageViewStar: ImageView = itemView.findViewById(R.id.imageViewStar)
 
         init {
             imageViewPoster.setOnClickListener {
-                listener.onFilmClick(adapterPosition)
+                listener?.onFilmClick(adapterPosition)
             }
             imageViewStar.setOnClickListener {
-                listener.onStarClick(adapterPosition)
+                listener?.onStarClick(adapterPosition)
             }
         }
 
-        fun isFavorite(): Boolean = currentFilm.isFavorite
+        fun isFavorite(): Boolean = dataList[adapterPosition].isFavorite
 
         fun bind(film: FilmData) {
-            currentFilm = film
             imageViewPoster.setImageBitmap(getFilmPoster(film.id))
             imageViewPoster.background =
                 ResourcesCompat.getColor(

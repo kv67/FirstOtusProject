@@ -23,10 +23,11 @@ import kve.ru.firstproject.adapter.FilmAdapter
 import kve.ru.firstproject.data.FavoriteList
 import kve.ru.firstproject.data.FilmData
 import kve.ru.firstproject.data.FilmList
+import kve.ru.firstproject.fragments.FilmListFragment
 import kve.ru.firstproject.utils.FavoriteItemDecoration
 import kve.ru.firstproject.utils.FilmsItemAnimator
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
 
     companion object {
         const val LOG_TAG = "FILMS_RESULT"
@@ -99,7 +100,15 @@ class MainActivity : AppCompatActivity() {
             initData()
         }
 
-        initRecyclerView()
+        supportFragmentManager.beginTransaction()
+            .replace(
+                R.id.fragmentContainer,
+                FilmListFragment.newInstance(films as ArrayList<FilmData>),
+                FilmListFragment.TAG
+            )
+            .commit()
+
+        // initRecyclerView()
     }
 
     private fun getColumnCount(): Int {
@@ -252,5 +261,38 @@ class MainActivity : AppCompatActivity() {
                 recyclerViewFilms.adapter?.notifyDataSetChanged()
             }
         }
+    }
+
+    override fun onFilmClick(position: Int) {
+//        films.find { it.selected }?.let {
+//            it.selected = false
+//            recyclerViewFilms.adapter?.notifyItemChanged(films.indexOf(it))
+//        }
+//        films[position].selected = true
+//        recyclerViewFilms.adapter?.notifyItemChanged(position)
+//        launchActivity(this, films[position])
+    }
+
+    override fun onStarClick(position: Int) {
+        if (films[position].isFavorite) {
+            favorites.find { films[position].id == it.id }?.let {
+                favorites.remove(it)
+            }
+        } else {
+            favorites.find { films[position].id == it.id }?.let {
+                Log.d(
+                    LOG_TAG,
+                    "Film with id: ${films[position].id} is already in favorites"
+                )
+            } ?: run {
+                favorites.add(films[position])
+            }
+        }
+        films[position].isFavorite = !films[position].isFavorite
+        (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as? FilmListFragment)
+            ?.notifyItemChanged(
+                position,
+                STAR_ANIMATE
+            )
     }
 }
