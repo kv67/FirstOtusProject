@@ -18,7 +18,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kve.ru.firstproject.SecondActivity.Companion.EXTRA_DATA
+import kve.ru.firstproject.FilmDetailActivity.Companion.EXTRA_DATA
 import kve.ru.firstproject.adapter.FilmAdapter
 import kve.ru.firstproject.data.FavoriteList
 import kve.ru.firstproject.data.FilmData
@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         private lateinit var EMMANUELLE_BMP: Bitmap
 
         fun launchActivity(activity: Activity, selectedData: FilmData) {
-            Intent(activity, SecondActivity::class.java).apply {
+            Intent(activity, FilmDetailActivity::class.java).apply {
                 putExtra(EXTRA_DATA, selectedData)
                 activity.startActivityForResult(this, REQUEST_CODE_EDIT_PROFILE)
             }

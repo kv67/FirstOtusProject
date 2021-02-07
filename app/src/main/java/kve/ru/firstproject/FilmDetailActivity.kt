@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import kve.ru.firstproject.data.FilmData
 
 
-class SecondActivity : AppCompatActivity() {
+class FilmDetailActivity : AppCompatActivity() {
 
     private var currentFilm = FilmData(
         0, "Empty film", "", 0, "",
@@ -39,7 +39,7 @@ class SecondActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_second)
+        setContentView(R.layout.activity_film_detail)
 
         val filmData = intent?.getParcelableExtra<FilmData>(EXTRA_DATA)
         filmData?.let {
