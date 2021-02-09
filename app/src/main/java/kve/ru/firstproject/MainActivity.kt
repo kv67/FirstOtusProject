@@ -10,28 +10,26 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ThumbnailUtils
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kve.ru.firstproject.SecondActivity.Companion.EXTRA_DATA
+import kve.ru.firstproject.FilmDetailActivity.Companion.EXTRA_DATA
 import kve.ru.firstproject.adapter.FilmAdapter
 import kve.ru.firstproject.data.FavoriteList
 import kve.ru.firstproject.data.FilmData
 import kve.ru.firstproject.data.FilmList
+import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.fragments.FilmListFragment
-import kve.ru.firstproject.utils.FavoriteItemDecoration
-import kve.ru.firstproject.utils.FilmsItemAnimator
 
 class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
 
     companion object {
         const val LOG_TAG = "FILMS_RESULT"
         const val FILMS = "FILMS"
+        const val POSITION = "POSITION"
         const val FAVORITES = "FAVORITES"
         const val STAR_ANIMATE = "STAR_ANIMATE"
         const val REQUEST_CODE_EDIT_PROFILE = 1
@@ -46,12 +44,12 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
         private lateinit var COMMANDO_BMP: Bitmap
         private lateinit var EMMANUELLE_BMP: Bitmap
 
-        fun launchActivity(activity: Activity, selectedData: FilmData) {
-            Intent(activity, SecondActivity::class.java).apply {
+        /*fun launchActivity(activity: Activity, selectedData: FilmData) {
+            Intent(activity, FilmDetailActivity::class.java).apply {
                 putExtra(EXTRA_DATA, selectedData)
                 activity.startActivityForResult(this, REQUEST_CODE_EDIT_PROFILE)
             }
-        }
+        }*/
 
         fun launchFavoriteActivity(activity: Activity, favorites: MutableList<FilmData>) {
             Intent(activity, FavoriteActivity::class.java).apply {
@@ -71,6 +69,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
         }
     }
 
+    private var curPosition: Int = -1
     private lateinit var films: MutableList<FilmData>
     private var favorites = ArrayList<FilmData>()
     private val recyclerViewFilms by lazy {
@@ -99,7 +98,25 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
         } ?: run {
             initData()
         }
+        savedInstanceState?.getInt(POSITION)?.let {
+            curPosition = it
+        }
 
+        savedInstanceState ?: run {
+            showFilmList()
+        }
+
+        // initRecyclerView()
+    }
+
+    /*private fun getColumnCount(): Int {
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val width: Int = (displayMetrics.widthPixels / displayMetrics.density).toInt()
+        return if (width / 185 > 2) width / 185 else 2
+    }*/
+
+    private fun showFilmList() {
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.fragmentContainer,
@@ -107,15 +124,6 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
                 FilmListFragment.TAG
             )
             .commit()
-
-        // initRecyclerView()
-    }
-
-    private fun getColumnCount(): Int {
-        val displayMetrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
-        val width: Int = (displayMetrics.widthPixels / displayMetrics.density).toInt()
-        return if (width / 185 > 2) width / 185 else 2
     }
 
     private fun initData() {
@@ -152,7 +160,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
         )
     }
 
-    private fun initRecyclerView() {
+    /*private fun initRecyclerView() {
         val adapter = FilmAdapter(films, object : FilmAdapter.OnFilmClickListener {
             override fun onFilmClick(position: Int) {
                 films.find { it.selected }?.let {
@@ -190,23 +198,36 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
             recyclerViewFilms.addItemDecoration(FavoriteItemDecoration(applicationContext, 15))
             itemAnimator = FilmsItemAnimator()
         }
-    }
+    }*/
 
     override fun onBackPressed() {
-        val bld: AlertDialog.Builder = AlertDialog.Builder(this)
-        val lst =
-            DialogInterface.OnClickListener { dialog: DialogInterface, which ->
-                when (which) {
-                    BUTTON_NEGATIVE -> dialog.dismiss()
-                    BUTTON_POSITIVE -> super.onBackPressed()
+        val fragment = supportFragmentManager.fragments.last()
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            if (fragment.tag == FilmDetailFragment.TAG) {
+                (fragment as FilmDetailFragment).getComment()?.let {
+                    films[curPosition].comment = it.toString()
+                }
+                fragment.isOk()?.let {
+                    films[curPosition].isOK = it
                 }
             }
-        bld.setMessage(getString(R.string.ask_exit_conform))
-        bld.setTitle(getString(R.string.exit_title))
-        bld.setNegativeButton(getString(R.string.negative_button), lst)
-        bld.setPositiveButton(getString(R.string.positive_button), lst)
-        val dialog: AlertDialog = bld.create()
-        dialog.show()
+            super.onBackPressed()
+        } else {
+            val bld: AlertDialog.Builder = AlertDialog.Builder(this)
+            val lst =
+                DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                    when (which) {
+                        BUTTON_NEGATIVE -> dialog.dismiss()
+                        BUTTON_POSITIVE -> super.onBackPressed()
+                    }
+                }
+            bld.setMessage(getString(R.string.ask_exit_conform))
+            bld.setTitle(getString(R.string.exit_title))
+            bld.setNegativeButton(getString(R.string.negative_button), lst)
+            bld.setPositiveButton(getString(R.string.positive_button), lst)
+            val dialog: AlertDialog = bld.create()
+            dialog.show()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -228,6 +249,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
         super.onSaveInstanceState(outState)
         outState.putParcelable(FILMS, FilmList(films))
         outState.putParcelable(FAVORITES, FavoriteList(favorites))
+        outState.putInt(POSITION, curPosition)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -264,6 +286,17 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
     }
 
     override fun onFilmClick(position: Int) {
+        curPosition = position
+
+        supportFragmentManager.beginTransaction()
+            .replace(
+                R.id.fragmentContainer,
+                FilmDetailFragment.newInstance(films[position]),
+                FilmDetailFragment.TAG
+            )
+            .addToBackStack(null)
+            .commit()
+
 //        films.find { it.selected }?.let {
 //            it.selected = false
 //            recyclerViewFilms.adapter?.notifyItemChanged(films.indexOf(it))
