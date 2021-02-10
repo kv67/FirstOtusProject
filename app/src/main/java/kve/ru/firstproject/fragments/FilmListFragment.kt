@@ -43,7 +43,7 @@ class FilmListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerViewFilms = view.findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment).apply {
-            val films = arguments?.getParcelable<FilmList>(EXTRA_LIST)?.films ?: ArrayList<FilmData>()
+            val films = arguments?.getParcelable<FilmList>(EXTRA_LIST)?.films ?: ArrayList()
             adapter = FilmAdapter(films, (activity as? FilmAdapter.OnFilmClickListener))
             layoutManager = GridLayoutManager(requireContext(), getColumnCount())
             addItemDecoration(FavoriteItemDecoration(requireContext(), 15))

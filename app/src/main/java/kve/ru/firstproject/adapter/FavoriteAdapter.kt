@@ -27,6 +27,8 @@ class FavoriteAdapter(private val dataList: MutableList<FilmData>) :
         return dataList.size
     }
 
+    fun getCurrentFilmId(position: Int) = dataList[position].id
+
     inner class FavoriteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val imageViewPoster = itemView.findViewById<ImageView>(R.id.imageViewPoster)
         private val textViewName = itemView.findViewById<TextView>(R.id.textViewName)

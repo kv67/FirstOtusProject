@@ -14,7 +14,8 @@ import kve.ru.firstproject.data.FilmData
 
 class FilmAdapter(
     private val dataList: MutableList<FilmData>,
-    private val listener: OnFilmClickListener?) :
+    private val listener: OnFilmClickListener?
+) :
     RecyclerView.Adapter<FilmAdapter.FilmViewHolder>() {
 
     interface OnFilmClickListener {

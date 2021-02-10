@@ -21,10 +21,12 @@ import kve.ru.firstproject.adapter.FilmAdapter
 import kve.ru.firstproject.data.FavoriteList
 import kve.ru.firstproject.data.FilmData
 import kve.ru.firstproject.data.FilmList
+import kve.ru.firstproject.fragments.FavoriteListFragment
 import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.fragments.FilmListFragment
 
-class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
+class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
+    FavoriteListFragment.OnRemoveListener {
 
     companion object {
         const val LOG_TAG = "FILMS_RESULT"
@@ -238,7 +240,16 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menuFavourite -> {
-                launchFavoriteActivity(this, favorites)
+//                launchFavoriteActivity(this, favorites)
+                supportFragmentManager.beginTransaction()
+                    .replace(
+                        R.id.fragmentContainer,
+                        FavoriteListFragment.newInstance(
+                            (films.filter{it.isFavorite}) as ArrayList<FilmData>),
+                        FavoriteListFragment.TAG
+                    )
+                    .addToBackStack(null)
+                    .commit()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -252,7 +263,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
         outState.putInt(POSITION, curPosition)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    /*override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == REQUEST_CODE_EDIT_PROFILE && resultCode == RESULT_OK) {
@@ -283,7 +294,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
                 recyclerViewFilms.adapter?.notifyDataSetChanged()
             }
         }
-    }
+    }*/
 
     override fun onFilmClick(position: Int) {
         curPosition = position
@@ -297,13 +308,13 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
             .addToBackStack(null)
             .commit()
 
-//        films.find { it.selected }?.let {
-//            it.selected = false
-//            recyclerViewFilms.adapter?.notifyItemChanged(films.indexOf(it))
-//        }
-//        films[position].selected = true
-//        recyclerViewFilms.adapter?.notifyItemChanged(position)
-//        launchActivity(this, films[position])
+       /* films.find { it.selected }?.let {
+            it.selected = false
+            recyclerViewFilms.adapter?.notifyItemChanged(films.indexOf(it))
+        }
+        films[position].selected = true
+        recyclerViewFilms.adapter?.notifyItemChanged(position)
+        launchActivity(this, films[position])*/
     }
 
     override fun onStarClick(position: Int) {
@@ -327,5 +338,17 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener {
                 position,
                 STAR_ANIMATE
             )
+    }
+
+    override fun onRemove(id: Int) {
+        val position = films.indexOf(films.first { it.id == id })
+        position?.let {
+            films[it].isFavorite = false
+            (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as? FilmListFragment)
+                ?.notifyItemChanged(
+                    position,
+                    null
+                )
+        }
     }
 }
