@@ -1,16 +1,14 @@
 package kve.ru.firstproject.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kve.ru.firstproject.R
 import kve.ru.firstproject.adapter.FilmAdapter
-import kve.ru.firstproject.data.FavoriteList
 import kve.ru.firstproject.data.FilmData
 import kve.ru.firstproject.data.FilmList
 import kve.ru.firstproject.utils.FavoriteItemDecoration
@@ -33,6 +31,10 @@ class FilmListFragment : Fragment() {
 
     private var recyclerViewFilms: RecyclerView? = null
 
+    interface OnClickMenuItemListener {
+        fun onMenuItemClick()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -42,6 +44,17 @@ class FilmListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        requireActivity().title = getString(R.string.app_name)
+        setHasOptionsMenu(true)
+
+        view.findViewById<View>(R.id.buSendMessage).setOnClickListener {
+            Intent(Intent.ACTION_SEND).apply {
+                this.type = "*/*"
+                putExtra(Intent.EXTRA_TEXT, getString(R.string.inviting))
+                startActivity(Intent.createChooser(this, null))
+            }
+        }
+
         recyclerViewFilms = view.findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment).apply {
             val films = arguments?.getParcelable<FilmList>(EXTRA_LIST)?.films ?: ArrayList()
             adapter = FilmAdapter(films, (activity as? FilmAdapter.OnFilmClickListener))
@@ -60,5 +73,20 @@ class FilmListFragment : Fragment() {
 
     fun notifyItemChanged(position: Int, payload: Any?) {
         recyclerViewFilms?.adapter?.notifyItemChanged(position, payload)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.main_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menuFavourite -> {
+                (activity as? OnClickMenuItemListener)?.onMenuItemClick()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }

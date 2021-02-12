@@ -48,6 +48,7 @@ class FavoriteListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        requireActivity().title = getString(R.string.favorites)
         recyclerViewFavorites =
             view.findViewById<RecyclerView>(R.id.recyclerViewFavoriteFragment).apply {
                 favorites =

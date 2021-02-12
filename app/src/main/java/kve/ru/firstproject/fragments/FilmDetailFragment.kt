@@ -30,9 +30,6 @@ class FilmDetailFragment : Fragment() {
     private val imageViewPoster by lazy {
         view?.findViewById<ImageView>(R.id.imageViewPoster)
     }
-    private val textViewName by lazy {
-        view?.findViewById<TextView>(R.id.textViewName)
-    }
     private val textViewDsc by lazy {
         view?.findViewById<TextView>(R.id.textViewDsc)
     }
@@ -54,12 +51,12 @@ class FilmDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val filmData = arguments?.getParcelable<FilmData>(EXTRA_FILM)
         filmData?.let {
+            requireActivity().title = it.name
             editTextComment?.setText(it.comment)
             checkBoxLike?.isChecked = it.isOK
-            textViewName?.text = it.name
             textViewDsc?.text = it.dsc
             imageViewPoster?.setImageResource(it.img)
-        }
+        } ?: run { requireActivity().title = getString(R.string.no_name_film) }
     }
 
     fun getComment() = editTextComment?.text

@@ -22,4 +22,5 @@
     <string name="favorites">Favorites</string>
     <string name="favorite_remove_conform">Are you sure to remove from Favorites?</string>
     <string name="favorites_removing_title">Removing</string>
+    <string name="no_name_film">No name film</string>
 </resources>

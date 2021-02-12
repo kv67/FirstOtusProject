@@ -1,8 +1,6 @@
 
 e
 5app/src/main/java/kve/ru/firstproject/MainActivity.kt,4\e\4ee65b291e106d86eb69aa6c8ac1298549e3a523
-g
-7app/src/main/java/kve/ru/firstproject/SecondActivity.kt,c\0\c0a0d4c36ec3e0014c9c163bb9b932e8d263757c
 S
 #.idea/sonarlint/issuestore/index.pb,9\f\9fe84ebb15faf917b7def6236dba604453cc61e0
 i
@@ -13,3 +11,23 @@ p
 @app/src/main/java/kve/ru/firstproject/utils/FilmsItemAnimator.kt,f\e\fee77ea0dda498955281ed876d0222aaa728f401
 s
 Capp/src/main/java/kve/ru/firstproject/fragments/FilmListFragment.kt,0\d\0d66a2afd887f7f3c635099852508db7c905e5f1
+<
+build.gradle,f\0\f07866736216be0ee2aba49e392191aeae700a35
+j
+:app/src/main/java/kve/ru/firstproject/data/FavoriteList.kt,b\4\b4d036af0f0954ab309ad504f6b700009642cfcf
+f
+6app/src/main/java/kve/ru/firstproject/data/FilmList.kt,1\8\18cb3b4475127520526e5773ccee25f49b28bb10
+k
+;app/src/main/java/kve/ru/firstproject/FilmDetailActivity.kt,4\6\46ca6e7d5d6668790f3b01e293b8af441b897982
+P
+ app/src/main/AndroidManifest.xml,8\c\8c55c3ccc257e5907959013f99656e4c8ec3903e
+@
+app/build.gradle,f\4\f4a01d6a4fcb971362ec00a83903fd3902f52164
+u
+Eapp/src/main/java/kve/ru/firstproject/fragments/FilmDetailFragment.kt,3\a\3adfcadcdabd3511a599f94a7169da21bfac5cec
+f
+6app/src/main/java/kve/ru/firstproject/data/FilmData.kt,5\2\52005322b1a2e1ac5001d3c44be52fd73664c565
+p
+@app/src/main/java/kve/ru/firstproject/adapter/FavoriteAdapter.kt,f\8\f83026c6d670d1736f76728ea6858a154c7f7eab
+w
+Gapp/src/main/java/kve/ru/firstproject/fragments/FavoriteListFragment.kt,5\a\5ac93ebf3c4b70b1cea0aa8986df1f2e21602a06
