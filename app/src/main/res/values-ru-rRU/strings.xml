@@ -24,4 +24,8 @@
     <string name="favorite_remove_conform">"Удалить из Избранного? "</string>
     <string name="favorites_removing_title">Удаление</string>
     <string name="no_name_film">Фильм без названия</string>
+    <string name="menu_item_home">Домой</string>
+    <string name="menu_group_communicate">Контакты</string>
+    <string name="menu_item_email">Email</string>
+    <string name="menu_item_exit">Выход</string>
 </resources>

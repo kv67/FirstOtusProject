@@ -8,6 +8,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import kve.ru.firstproject.R
 import kve.ru.firstproject.data.FilmData
@@ -56,7 +57,12 @@ class FilmDetailFragment : Fragment() {
             checkBoxLike?.isChecked = it.isOK
             textViewDsc?.text = it.dsc
             imageViewPoster?.setImageResource(it.img)
-        } ?: run { requireActivity().title = getString(R.string.no_name_film) }
+        }
+
+        val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
+        filmData?.let {
+            toolbar.title = it.name
+        } ?: run { toolbar.title = getString(R.string.no_name_film) }
     }
 
     fun getComment() = editTextComment?.text

@@ -47,14 +47,6 @@ class FilmListFragment : Fragment() {
         requireActivity().title = getString(R.string.app_name)
         setHasOptionsMenu(true)
 
-        view.findViewById<View>(R.id.buSendMessage).setOnClickListener {
-            Intent(Intent.ACTION_SEND).apply {
-                this.type = "*/*"
-                putExtra(Intent.EXTRA_TEXT, getString(R.string.inviting))
-                startActivity(Intent.createChooser(this, null))
-            }
-        }
-
         recyclerViewFilms = view.findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment).apply {
             val films = arguments?.getParcelable<FilmList>(EXTRA_LIST)?.films ?: ArrayList()
             adapter = FilmAdapter(films, (activity as? FilmAdapter.OnFilmClickListener))
@@ -75,18 +67,4 @@ class FilmListFragment : Fragment() {
         recyclerViewFilms?.adapter?.notifyItemChanged(position, payload)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.main_menu, menu)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.menuFavourite -> {
-                (activity as? OnClickMenuItemListener)?.onMenuItemClick()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
 }
