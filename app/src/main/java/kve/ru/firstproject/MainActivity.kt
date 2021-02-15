@@ -10,17 +10,18 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ThumbnailUtils
 import android.os.Bundle
-import android.util.Log
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
 import kve.ru.firstproject.adapter.FilmAdapter
-import kve.ru.firstproject.data.FavoriteList
 import kve.ru.firstproject.data.FilmData
 import kve.ru.firstproject.data.FilmList
 import kve.ru.firstproject.fragments.FavoriteListFragment
@@ -31,10 +32,8 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
     FavoriteListFragment.OnRemoveListener, NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
-        const val LOG_TAG = "FILMS_RESULT"
         const val FILMS = "FILMS"
         const val POSITION = "POSITION"
-        const val FAVORITES = "FAVORITES"
         const val STAR_ANIMATE = "STAR_ANIMATE"
         const val BLOOD_SPORT = 1
         const val COCKTAIL = 2
@@ -73,11 +72,24 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
             val dialog: AlertDialog = bld.create()
             dialog.show()
         }
+
+        fun showSnackBar(
+            curView: View,
+            message: String,
+            listener: (() -> Unit)?
+        ) {
+            Snackbar.make(curView, message, Snackbar.LENGTH_LONG).apply {
+                view.setBackgroundColor(ContextCompat.getColor(context, R.color.colorPrimaryDark))
+                setAction(context.getString(R.string.undo_btn_title)) {
+                    listener?.let { it() }
+                }
+                show()
+            }
+        }
     }
 
     private var curPosition: Int = -1
     private lateinit var films: MutableList<FilmData>
-    private var favorites = ArrayList<FilmData>()
     private val drawer by lazy {
         findViewById<DrawerLayout>(R.id.drawer_layout)
     }
@@ -100,11 +112,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         } ?: run {
             initData()
         }
-        savedInstanceState?.getParcelable<FavoriteList>(FAVORITES)?.let {
-            favorites = it.favorites as ArrayList<FilmData>
-        } ?: run {
-            initData()
-        }
+
         savedInstanceState?.getInt(POSITION)?.let {
             curPosition = it
         }
@@ -207,7 +215,6 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putParcelable(FILMS, FilmList(films))
-        outState.putParcelable(FAVORITES, FavoriteList(favorites))
         outState.putInt(POSITION, curPosition)
     }
 
@@ -224,30 +231,23 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
     }
 
     override fun onStarClick(position: Int) {
-        if (films[position].isFavorite) {
-            favorites.find { films[position].id == it.id }?.let {
-                favorites.remove(it)
-            }
-        } else {
-            favorites.find { films[position].id == it.id }?.let {
-                Log.d(
-                    LOG_TAG,
-                    "Film with id: ${films[position].id} is already in favorites"
-                )
-            } ?: run {
-                favorites.add(films[position])
-            }
-        }
+
         films[position].isFavorite = !films[position].isFavorite
         (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as? FilmListFragment)
             ?.notifyItemChanged(
                 position,
                 STAR_ANIMATE
             )
+
+        showSnackBar(
+            findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment),
+            if (films[position].isFavorite) getString(R.string.add_to_favorite_msg)
+            else getString(R.string.remove_from_favorites_msg)
+        ) { onStarClick(position) }
     }
 
     override fun onRemove(id: Int) {
-        val position = films.indexOf(films.firstOrNull() { it.id == id })
+        val position = films.indexOf(films.firstOrNull { it.id == id })
         if (position > -1) {
             films[position].isFavorite = false
             (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as? FilmListFragment)
@@ -255,6 +255,21 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
                     position,
                     null
                 )
+            showSnackBar(
+                findViewById<RecyclerView>(R.id.recyclerViewFavoriteFragment),
+                getString(R.string.remove_from_favorites_msg)
+            ) {
+                films[position].isFavorite = true
+                (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as? FilmListFragment)
+                    ?.notifyItemChanged(
+                        position,
+                        null
+                    )
+                (supportFragmentManager.findFragmentByTag(FavoriteListFragment.TAG) as? FavoriteListFragment)
+                    ?.addRemovedFilm(
+                        films[position]
+                    )
+            }
         }
     }
 

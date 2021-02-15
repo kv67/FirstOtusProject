@@ -28,7 +28,10 @@
     <string name="menu_item_email">Email</string>
     <string name="menu_item_exit">Exit</string>
     <string name="drawer_icon" translatable="false">Drawer icon</string>
-    <string name="main_menu_title" translatable="false">Main menu</string>
+    <string name="main_menu_title">Main menu</string>
     <string name="open_drawer_dsc" translatable="false">Open drwer</string>
     <string name="close_drawer_dsc" translatable="false">Close drawer</string>
+    <string name="remove_from_favorites_msg">Film has removed from Favorites</string>
+    <string name="add_to_favorite_msg">Film has added to Favorites</string>
+    <string name="undo_btn_title">UNDO</string>
 </resources>

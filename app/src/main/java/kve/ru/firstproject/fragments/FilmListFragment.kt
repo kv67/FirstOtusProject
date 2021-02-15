@@ -1,9 +1,10 @@
 package kve.ru.firstproject.fragments
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,10 +31,6 @@ class FilmListFragment : Fragment() {
     }
 
     private var recyclerViewFilms: RecyclerView? = null
-
-    interface OnClickMenuItemListener {
-        fun onMenuItemClick()
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

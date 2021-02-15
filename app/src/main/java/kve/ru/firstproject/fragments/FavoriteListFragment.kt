@@ -57,7 +57,7 @@ class FavoriteListFragment : Fragment() {
                 layoutManager = GridLayoutManager(requireContext(), getColumnCount())
                 addItemDecoration(FavoriteItemDecoration(requireContext(), 15))
             }
-        initTouchHelper() {
+        initTouchHelper {
             (activity as? OnRemoveListener)?.onRemove(it)
         }
     }
@@ -115,6 +115,11 @@ class FavoriteListFragment : Fragment() {
         requireActivity().windowManager.defaultDisplay.getMetrics(displayMetrics)
         val width: Int = (displayMetrics.widthPixels / displayMetrics.density).toInt()
         return if (width / 185 > 2) width / 185 else 2
+    }
+
+    fun addRemovedFilm(film: FilmData) {
+        favorites.add(film)
+        recyclerViewFavorites?.adapter?.notifyItemInserted(favorites.size - 1)
     }
 
 }
