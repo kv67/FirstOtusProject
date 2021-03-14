@@ -8,7 +8,7 @@ import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.recyclerview.widget.RecyclerView
-import kve.ru.firstproject.MainActivity.Companion.getFilmPoster
+import com.bumptech.glide.Glide
 import kve.ru.firstproject.R
 import kve.ru.firstproject.data.FilmData
 
@@ -53,7 +53,11 @@ class FilmAdapter(
         fun isFavorite(): Boolean = dataList[adapterPosition].isFavorite
 
         fun bind(film: FilmData) {
-            imageViewPoster.setImageBitmap(getFilmPoster(film.id))
+            Glide.with(imageViewPoster.context)
+                .load(film.posterPath)
+                .placeholder(R.drawable.ic_baseline_image_24)
+                .error(R.drawable.ic_baseline_error_24)
+                .into(imageViewPoster)
             imageViewPoster.background =
                 ResourcesCompat.getColor(
                     itemView.resources,

@@ -77,33 +77,15 @@ class FavoriteListFragment : Fragment() {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
-
-                val bld: AlertDialog.Builder = AlertDialog.Builder(requireActivity())
-                val lst =
-                    DialogInterface.OnClickListener { dialog: DialogInterface, which ->
-                        when (which) {
-                            DialogInterface.BUTTON_NEGATIVE -> {
-                                recyclerViewFavorites?.adapter?.notifyDataSetChanged()
-                                dialog.dismiss()
-                            }
-                            DialogInterface.BUTTON_POSITIVE -> {
-                                listener?.invoke(
-                                    (recyclerViewFavorites?.adapter as FavoriteAdapter).getCurrentFilmId(
-                                        position
-                                    )
-                                )
-                                favorites.removeAt(position)
-                                recyclerViewFavorites?.adapter?.notifyItemRemoved(position)
-                                dialog.dismiss()
-                            }
-                        }
-                    }
-                bld.setMessage(getString(R.string.favorite_remove_conform))
-                bld.setTitle(getString(R.string.favorites_removing_title))
-                bld.setNegativeButton(getString(R.string.negative_button), lst)
-                bld.setPositiveButton(getString(R.string.positive_button), lst)
-                val dialog: AlertDialog = bld.create()
-                dialog.show()
+                (recyclerViewFavorites?.adapter as FavoriteAdapter).getCurrentFilmId(
+                    position
+                )?.let {
+                    listener?.invoke(
+                        it
+                    )
+                }
+                favorites.removeAt(position)
+                recyclerViewFavorites?.adapter?.notifyItemRemoved(position)
             }
         })
 

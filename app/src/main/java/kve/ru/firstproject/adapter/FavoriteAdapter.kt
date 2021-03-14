@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import kve.ru.firstproject.MainActivity
+import com.bumptech.glide.Glide
 import kve.ru.firstproject.R
 import kve.ru.firstproject.data.FilmData
 
@@ -39,7 +39,11 @@ class FavoriteAdapter(private val dataList: MutableList<FilmData>) :
         }
 
         fun bind(film: FilmData) {
-            imageViewPoster.setImageBitmap(MainActivity.getFilmPoster(film.id))
+            Glide.with(imageViewPoster.context)
+                .load(film.posterPath)
+                .placeholder(R.drawable.ic_baseline_image_24)
+                .error(R.drawable.ic_baseline_error_24)
+                .into(imageViewPoster)
             textViewName.text = film.name
         }
     }

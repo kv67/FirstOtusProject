@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
 import kve.ru.firstproject.R
 import kve.ru.firstproject.data.FilmData
 
@@ -56,7 +57,13 @@ class FilmDetailFragment : Fragment() {
             editTextComment?.setText(it.comment)
             checkBoxLike?.isChecked = it.isOK
             textViewDsc?.text = it.dsc
-            imageViewPoster?.setImageResource(it.img)
+            imageViewPoster?.let { img ->
+                Glide.with(img.context)
+                    .load(it.bigPosterPath)
+                    .placeholder(R.drawable.ic_baseline_image_24)
+                    .error(R.drawable.ic_baseline_error_24)
+                    .into(img)
+            }
         }
 
         val toolbar = view.findViewById<Toolbar>(R.id.toolbar)

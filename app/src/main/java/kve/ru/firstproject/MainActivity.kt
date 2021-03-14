@@ -6,12 +6,11 @@ import android.content.DialogInterface
 import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.media.ThumbnailUtils
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -27,36 +26,24 @@ import kve.ru.firstproject.data.FilmList
 import kve.ru.firstproject.fragments.FavoriteListFragment
 import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.fragments.FilmListFragment
+import kve.ru.firstproject.pojo.MovieResponse
+import kve.ru.firstproject.utils.NetworkUtils
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
     FavoriteListFragment.OnRemoveListener, NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
+        const val TAG = "MainActivity"
         const val FILMS = "FILMS"
         const val POSITION = "POSITION"
         const val STAR_ANIMATE = "STAR_ANIMATE"
-        const val BLOOD_SPORT = 1
-        const val COCKTAIL = 2
-        const val COMMANDO = 3
-        const val EMMANUELLE = 4
-
-        private lateinit var BLOOD_SPORT_BMP: Bitmap
-        private lateinit var COCKTAIL_BMP: Bitmap
-        private lateinit var COMMANDO_BMP: Bitmap
-        private lateinit var EMMANUELLE_BMP: Bitmap
-
-        fun getFilmPoster(id: Int): Bitmap? {
-            return when (id) {
-                BLOOD_SPORT -> BLOOD_SPORT_BMP
-                COCKTAIL -> COCKTAIL_BMP
-                COMMANDO -> COMMANDO_BMP
-                EMMANUELLE -> EMMANUELLE_BMP
-                else -> null
-            }
-        }
 
         fun doExit(activity: Activity) {
-
             val bld: AlertDialog.Builder = AlertDialog.Builder(activity)
             val lst =
                 DialogInterface.OnClickListener { dialog: DialogInterface, which ->
@@ -89,7 +76,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
     }
 
     private var curPosition: Int = -1
-    private lateinit var films: MutableList<FilmData>
+    private var films: MutableList<FilmData> = ArrayList()
     private val drawer by lazy {
         findViewById<DrawerLayout>(R.id.drawer_layout)
     }
@@ -144,37 +131,60 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
     }
 
     private fun initData() {
-        var bitmap = BitmapFactory.decodeResource(resources, R.drawable.bloodsport)
-        BLOOD_SPORT_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
-        bitmap = BitmapFactory.decodeResource(resources, R.drawable.cocktail)
-        COCKTAIL_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
-        bitmap = BitmapFactory.decodeResource(resources, R.drawable.commando)
-        COMMANDO_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
-        bitmap = BitmapFactory.decodeResource(resources, R.drawable.emmanuelle)
-        EMMANUELLE_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
+        App.instance.api.getMovies(
+            NetworkUtils.API_KEY, Locale.getDefault().language,
+            NetworkUtils.SORT_BY_POPULARITY, "1"
+        )?.enqueue(object : Callback<MovieResponse?> {
+            override fun onResponse(
+                call: Call<MovieResponse?>,
+                response: Response<MovieResponse?>
+            ) {
+                if (response.isSuccessful) {
+                    Toast.makeText(this@MainActivity, "Response is OK", Toast.LENGTH_SHORT).show()
+                    response.body()?.apply {
+                        Log.d(TAG, "Films list size: ${this.movies?.size}")
+                        this.movies?.let {
+                            for (movie in it) {
+                                movie?.let {
+                                    var path: String? = movie.posterPath
+                                    var bigPath: String? = null
+                                    path?.let { p ->
+                                        if (!p.startsWith(
+                                                NetworkUtils.BASE_POSTER_URL +
+                                                        NetworkUtils.SMALL_POSTER_SIZE
+                                            )
+                                        ) {
+                                            path = NetworkUtils.BASE_POSTER_URL +
+                                                    NetworkUtils.SMALL_POSTER_SIZE + p
+                                            bigPath = NetworkUtils.BASE_POSTER_URL +
+                                                    NetworkUtils.BIG_POSTER_SIZE + p
+                                        }
+                                    }
+                                    films.add(
+                                        FilmData(
+                                            movie.id, movie.title, movie.overview, null,
+                                            path, bigPath, "", isOK = false, selected = false,
+                                            isFavorite = false
+                                        )
+                                    )
+                                }
+                            }
 
-        films = mutableListOf(
-            FilmData(
-                BLOOD_SPORT, getString(R.string.blood_sport),
-                getString(R.string.blood_sport_dsc), R.drawable.bloodsport,
-                "", isOK = false, selected = false, isFavorite = false
-            ),
-            FilmData(
-                COCKTAIL, getString(R.string.cocktail),
-                getString(R.string.cocktail_dsc), R.drawable.cocktail,
-                "", isOK = false, selected = false, isFavorite = false
-            ),
-            FilmData(
-                COMMANDO, getString(R.string.commando),
-                getString(R.string.commando_dsc), R.drawable.commando,
-                "", isOK = false, selected = false, isFavorite = false
-            ),
-            FilmData(
-                EMMANUELLE, getString(R.string.emmanuelle),
-                getString(R.string.emmanuelle_dsc), R.drawable.emmanuelle,
-                "", isOK = false, selected = false, isFavorite = false
-            )
-        )
+                            val fragment = supportFragmentManager.fragments.last()
+                            if (fragment.tag == FilmListFragment.TAG) {
+                                (fragment as FilmListFragment).notifyItemChanged(0, null)
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(this@MainActivity, response.message(), Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<MovieResponse?>, t: Throwable) {
+                Toast.makeText(this@MainActivity, t.message, Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     override fun onBackPressed() {
