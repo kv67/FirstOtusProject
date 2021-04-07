@@ -1,11 +1,14 @@
 package kve.ru.firstproject
 
 import android.app.Application
+import kve.ru.firstproject.db.Db
 import kve.ru.firstproject.utils.NetworkUtils
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.Executors
+
 
 class App : Application() {
 
@@ -19,28 +22,20 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-
         initRetrofit()
     }
 
+
     private fun initRetrofit() {
+
         val client = OkHttpClient.Builder()
-//            .addInterceptor { chain ->
-//                return@addInterceptor chain.proceed(
-//                    chain
-//                        .request()
-//                        .newBuilder()
-//                        .addHeader("Authorization", "Bearer fdkghgegnin")
-//                        .build()
-//                )
-//            }
             .addInterceptor(
                 HttpLoggingInterceptor()
-                .apply {
-                    if (BuildConfig.DEBUG) {
-                        level = HttpLoggingInterceptor.Level.BASIC
-                    }
-                })
+                    .apply {
+                        if (BuildConfig.DEBUG) {
+                            level = HttpLoggingInterceptor.Level.BASIC
+                        }
+                    })
             .build()
 
         val retrofit = Retrofit.Builder()
