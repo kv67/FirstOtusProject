@@ -1,42 +1,35 @@
 package kve.ru.firstproject.fragments
 
-import android.app.AlertDialog
-import android.content.DialogInterface
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import kve.ru.firstproject.R
 import kve.ru.firstproject.adapter.FavoriteAdapter
-import kve.ru.firstproject.data.FilmData
-import kve.ru.firstproject.data.FilmList
+import kve.ru.firstproject.model.FilmViewModel
 import kve.ru.firstproject.utils.FavoriteItemDecoration
 
 class FavoriteListFragment : Fragment() {
 
     companion object {
         const val TAG = "FavoriteListFragment"
-        private const val FAVORITE_LIST = "FAVORITE_LIST"
+    }
 
-        fun newInstance(data: ArrayList<FilmData>): FavoriteListFragment {
-            return FavoriteListFragment().apply {
-                arguments = Bundle().apply {
-                    putParcelable(FAVORITE_LIST, FilmList(data))
-                }
-            }
-        }
+    private val viewModel by lazy {
+        ViewModelProvider(requireActivity())[FilmViewModel::class.java]
     }
 
     private var recyclerViewFavorites: RecyclerView? = null
-    private var favorites = ArrayList<FilmData>()
+    private var favoriteAdapter: FavoriteAdapter? = null
 
     interface OnRemoveListener {
-        fun onRemove(id: Int)
+        fun onRemove(position: Int)
     }
 
     override fun onCreateView(
@@ -44,22 +37,28 @@ class FavoriteListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        retainInstance = true
         return inflater.inflate(R.layout.fragment_favorite_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         requireActivity().title = getString(R.string.favorites)
+        favoriteAdapter = FavoriteAdapter()
         recyclerViewFavorites =
             view.findViewById<RecyclerView>(R.id.recyclerViewFavoriteFragment).apply {
-                favorites =
-                    (arguments?.getParcelable<FilmList>(FAVORITE_LIST)?.films as ArrayList)
-                adapter = FavoriteAdapter(favorites)
+                adapter = favoriteAdapter
                 layoutManager = GridLayoutManager(requireContext(), getColumnCount())
                 addItemDecoration(FavoriteItemDecoration(requireContext(), 15))
             }
+
         initTouchHelper {
             (activity as? OnRemoveListener)?.onRemove(it)
         }
+
+        viewModel.favorites.observe(viewLifecycleOwner, { favorites ->
+            favoriteAdapter?.setData(favorites)
+        })
+
     }
 
     private fun initTouchHelper(listener: ((id: Int) -> Unit)?) {
@@ -76,16 +75,7 @@ class FavoriteListFragment : Fragment() {
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
-                (recyclerViewFavorites?.adapter as FavoriteAdapter).getCurrentFilmId(
-                    position
-                )?.let {
-                    listener?.invoke(
-                        it
-                    )
-                }
-                favorites.removeAt(position)
-                recyclerViewFavorites?.adapter?.notifyItemRemoved(position)
+                listener?.invoke(viewHolder.adapterPosition)
             }
         })
 
@@ -99,9 +89,7 @@ class FavoriteListFragment : Fragment() {
         return if (width / 185 > 2) width / 185 else 2
     }
 
-    fun addRemovedFilm(film: FilmData) {
-        favorites.add(film)
-        recyclerViewFavorites?.adapter?.notifyItemInserted(favorites.size - 1)
+    fun getFavoriteListAdapter(): FavoriteAdapter? {
+        return favoriteAdapter
     }
-
 }

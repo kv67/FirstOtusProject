@@ -1,13 +1,11 @@
 package kve.ru.firstproject
 
 import android.app.Application
-import kve.ru.firstproject.db.Db
 import kve.ru.firstproject.utils.NetworkUtils
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.Executors
 
 
 class App : Application() {
@@ -25,9 +23,7 @@ class App : Application() {
         initRetrofit()
     }
 
-
     private fun initRetrofit() {
-
         val client = OkHttpClient.Builder()
             .addInterceptor(
                 HttpLoggingInterceptor()

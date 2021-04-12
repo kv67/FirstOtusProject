@@ -8,11 +8,9 @@ import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.Intent
 import android.os.Bundle
 import android.os.PersistableBundle
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.ProgressBar
-import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -23,25 +21,20 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
+import kve.ru.firstproject.adapter.FavoriteAdapter
 import kve.ru.firstproject.adapter.FilmAdapter
-import kve.ru.firstproject.data.FilmData
-import kve.ru.firstproject.db.Db
 import kve.ru.firstproject.db.Film
 import kve.ru.firstproject.fragments.FavoriteListFragment
 import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.fragments.FilmListFragment
 import kve.ru.firstproject.model.FilmViewModel
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
     FavoriteListFragment.OnRemoveListener, NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
         const val TAG = "Main_Activity"
-        const val FILMS = "FILMS"
         const val POSITION = "POSITION"
-        const val CUR_PAGE = "CUR_PAGE"
         const val STAR_ANIMATE = "STAR_ANIMATE"
 
         fun doExit(activity: Activity) {
@@ -64,11 +57,12 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         fun showSnackBar(
             curView: View,
             message: String,
+            buttonCaption: String,
             listener: (() -> Unit)?
         ) {
             Snackbar.make(curView, message, Snackbar.LENGTH_LONG).apply {
                 view.setBackgroundColor(ContextCompat.getColor(context, R.color.colorPrimaryDark))
-                setAction(context.getString(R.string.undo_btn_title)) {
+                setAction(buttonCaption) {
                     listener?.let { it() }
                 }
                 show()
@@ -76,9 +70,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         }
     }
 
-    private var curPage: Int = 0
     private var curPosition: Int = -1
-    private var films: MutableList<FilmData> = ArrayList()
     private val drawer by lazy {
         findViewById<DrawerLayout>(R.id.drawer_layout)
     }
@@ -92,8 +84,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         findViewById<ProgressBar>(R.id.progressBarLoading)
     }
     private val viewModel by lazy {
-        ViewModelProvider.AndroidViewModelFactory.getInstance(application)
-            .create(FilmViewModel::class.java)
+        ViewModelProvider(this)[FilmViewModel::class.java]
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,20 +93,6 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
 
         setSupportActionBar(toolbar)
         initDrawer()
-
-//        savedInstanceState?.getInt(POSITION)?.let {
-//            curPosition = it
-//        }
-//
-//        savedInstanceState?.getInt(CUR_PAGE)?.let {
-//            curPage = it
-//        }
-//
-//        savedInstanceState?.getParcelable<FilmList>(FILMS)?.let {
-//            films = it.films
-//        } ?: run {
-//            loadData()
-//        }
 
         viewModel.loading.observe(this, {
             if (it) {
@@ -128,7 +105,11 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         viewModel.error.observe(this, {
             progressBarLoading.visibility = View.INVISIBLE
             it?.let {
-                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                showSnackBar(
+                    findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment),
+                    getString(R.string.load_data_error_msg) + it,
+                    getString(R.string.repeat_caption)
+                ) { viewModel.loadData() }
                 viewModel.clearErrors()
             }
         })
@@ -136,11 +117,9 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         savedInstanceState?.let {
             curPosition = it.getInt(POSITION)
         } ?: run {
-            Log.d(TAG, "LOAD DATA")
             viewModel.loadData()
             showFilmList()
         }
-
     }
 
     private fun showFilmList() {
@@ -148,7 +127,6 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
             .replace(
                 R.id.fragmentContainer,
                 FilmListFragment(),
-//                FilmListFragment.newInstance(films as ArrayList<FilmData>),
                 FilmListFragment.TAG
             )
             .commit()
@@ -163,6 +141,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         navigationView.setNavigationItemSelectedListener(this)
         navigationView.getHeaderView(0)
             .setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark))
+        navigationView.menu.findItem(R.id.nav_home).isChecked = true
     }
 
     private fun getCurrentFilm(position: Int): Film? {
@@ -182,6 +161,23 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         return null
     }
 
+    private fun getCurrentFavorite(position: Int): Film? {
+        getFragmentFavoriteListAdapter()?.let { adapter ->
+            adapter.getItemByPos(position)?.let {
+                return it
+            }
+        }
+        return null
+    }
+
+    private fun getFragmentFavoriteListAdapter(): FavoriteAdapter? {
+        (supportFragmentManager.findFragmentByTag(FavoriteListFragment.TAG) as FavoriteListFragment?)
+            ?.getFavoriteListAdapter()?.let {
+                return it
+            }
+        return null
+    }
+
     override fun onBackPressed() {
         val fragment = supportFragmentManager.fragments.last()
         if (supportFragmentManager.backStackEntryCount > 0) {
@@ -194,16 +190,15 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
                         this.isOk()?.let {
                             film.isOK = if (it) 1 else 0
                         }
-                        updateFilm(film)
+                        viewModel.updateFilm(film)
                     }
                 }
             }
             if (fragment.tag != FilmListFragment.TAG) {
-                val menuItem = navigationView.menu.findItem(R.id.nav_home)
-                menuItem.isChecked = true
-
+                navigationView.menu.findItem(R.id.nav_home).isChecked = true
+                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
+                super.onBackPressed()
             }
-            super.onBackPressed()
         } else {
             val bld: AlertDialog.Builder = AlertDialog.Builder(this)
             val lst =
@@ -228,38 +223,36 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
     }
 
     override fun onFilmClick(position: Int) {
-        (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as FilmListFragment?)
-            ?.getFilmListAdapter()?.let { adapter ->
-                adapter.getItemByPos(position)?.let { film ->
-                    curPosition = position
-                    supportFragmentManager.beginTransaction()
-                        .replace(
-                            R.id.fragmentContainer,
-                            FilmDetailFragment.newInstance(film.id),
-                            FilmDetailFragment.TAG
-                        )
-                        .addToBackStack(null)
-                        .commit()
-                }
+        getFragmentFilmListAdapter()?.let { adapter ->
+            adapter.getItemByPos(position)?.let { film ->
+                curPosition = position
+                supportFragmentManager.beginTransaction()
+                    .replace(
+                        R.id.fragmentContainer,
+                        FilmDetailFragment.newInstance(film.id),
+                        FilmDetailFragment.TAG
+                    )
+                    .addToBackStack(null)
+                    .commit()
+                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = false
             }
-    }
-
-    private fun updateFilm(film: Film) {
-        val task = Runnable {
-            Db.getInstance(App.instance)?.getFilmDao()?.updateFilm(film)
         }
-        Executors.newSingleThreadScheduledExecutor().schedule(task, 20, TimeUnit.MILLISECONDS)
     }
 
     override fun onStarClick(position: Int) {
         getCurrentFilm(position)?.let {
             it.isFavorite = if (it.isFavorite == 0) 1 else 0
-            updateFilm(it)
-            getFragmentFilmListAdapter()?.notifyItemChanged(position, STAR_ANIMATE)
+            if (it.isFavorite == 1) {
+                viewModel.addToFavorite(it.id)
+                getFragmentFilmListAdapter()?.notifyItemChanged(position, STAR_ANIMATE)
+            } else {
+                viewModel.updateFilm(it)
+            }
             showSnackBar(
                 findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment),
                 if (it.isFavorite == 1) getString(R.string.add_to_favorite_msg)
-                else getString(R.string.remove_from_favorites_msg)
+                else getString(R.string.remove_from_favorites_msg),
+                getString(R.string.undo_btn_title)
             ) { onStarClick(position) }
         }
     }
@@ -268,29 +261,17 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         viewModel.loadData()
     }
 
-    override fun onRemove(id: Int) {
-        val position = films.indexOf(films.firstOrNull { it.id == id })
-        if (position > -1) {
-            films[position].isFavorite = false
-            (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as FilmListFragment?)
-                ?.notifyItemChanged(
-                    position,
-                    null
-                )
+    override fun onRemove(position: Int) {
+        getCurrentFavorite(position)?.let {
+            it.isFavorite = 0
+            viewModel.updateFilm(it)
             showSnackBar(
                 findViewById<RecyclerView>(R.id.recyclerViewFavoriteFragment),
-                getString(R.string.remove_from_favorites_msg)
+                getString(R.string.remove_from_favorites_msg),
+                getString(R.string.undo_btn_title)
             ) {
-                films[position].isFavorite = true
-                (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as FilmListFragment?)
-                    ?.notifyItemChanged(
-                        position,
-                        null
-                    )
-                (supportFragmentManager.findFragmentByTag(FavoriteListFragment.TAG) as FavoriteListFragment?)
-                    ?.addRemovedFilm(
-                        films[position]
-                    )
+                it.isFavorite = 1
+                viewModel.updateFilm(it)
             }
         }
     }
@@ -299,9 +280,12 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         val fragment = supportFragmentManager.fragments.last()
         when (item.itemId) {
             R.id.nav_home -> {
-                if (fragment.tag != FilmListFragment.TAG) {
+                if (fragment.tag != FilmListFragment.TAG &&
+                    supportFragmentManager.backStackEntryCount > 0
+                ) {
                     onBackPressed()
                 }
+                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
             }
             R.id.nav_favorites -> {
                 if (fragment.tag != FavoriteListFragment.TAG) {
@@ -311,14 +295,13 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
                     supportFragmentManager.beginTransaction()
                         .replace(
                             R.id.fragmentContainer,
-                            FavoriteListFragment.newInstance(
-                                (films.filter { it.isFavorite }) as ArrayList<FilmData>
-                            ),
+                            FavoriteListFragment(),
                             FavoriteListFragment.TAG
                         )
                         .addToBackStack(null)
                         .commit()
                 }
+                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = false
             }
             R.id.nav_message -> {
                 Intent(Intent.ACTION_SEND).apply {
@@ -329,6 +312,25 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
             }
             R.id.nav_exit -> {
                 doExit(this)
+            }
+            R.id.nav_delete_cache -> {
+                val bld: AlertDialog.Builder = AlertDialog.Builder(this)
+                val lst =
+                    DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                        when (which) {
+                            BUTTON_NEGATIVE -> dialog.dismiss()
+                            BUTTON_POSITIVE -> {
+                                viewModel.clearFilms()
+                                dialog.dismiss()
+                            }
+                        }
+                    }
+                bld.setMessage(getString(R.string.clear_cache_confirmation))
+                bld.setTitle(this.getString(R.string.clear_the_cache))
+                bld.setNegativeButton(this.getString(R.string.negative_button), lst)
+                bld.setPositiveButton(this.getString(R.string.positive_button), lst)
+                val dialog: AlertDialog = bld.create()
+                dialog.show()
             }
         }
 

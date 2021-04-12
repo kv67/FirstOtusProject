@@ -29,10 +29,6 @@ h
 8app/src/main/res/drawable/ic_baseline_exit_to_app_24.xml,f\c\fca6749237a33a3f0fb22bda0f41843dfa5eeca2
 b
 2app/src/main/res/drawable/ic_baseline_grade_24.xml,0\5\05fcb9aa144301ceca6591b11d914f29469600e0
-a
-1app/src/main/res/drawable/ic_baseline_home_24.xml,e\a\eaf76a0a3f1a5d626829371b1c71feea8667e36b
-U
-%app/src/main/res/menu/drawer_menu.xml,9\b\9bd24b5aaa39c03d9f98d80ab909f2bc466b5ceb
 u
 Eapp/src/main/java/kve/ru/firstproject/utils/FavoriteItemDecoration.kt,2\2\220536f4e71035bc5c9e7184d47c3de4117934a2
 X

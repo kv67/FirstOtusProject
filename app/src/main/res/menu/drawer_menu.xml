@@ -27,4 +27,13 @@
         </menu>
     </item>
 
+    <item android:title="@string/utils">
+        <menu>
+            <item
+                android:id="@+id/nav_delete_cache"
+                android:icon="@drawable/ic_baseline_delete_24"
+                android:title="@string/clear_the_cache" />
+        </menu>
+    </item>
+
 </menu>

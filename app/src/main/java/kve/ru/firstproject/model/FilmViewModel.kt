@@ -8,6 +8,7 @@ import kve.ru.firstproject.App
 import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.db.Db
 import kve.ru.firstproject.db.Film
+import kve.ru.firstproject.pojo.BestMovie
 import kve.ru.firstproject.pojo.MovieResponse
 import kve.ru.firstproject.utils.NetworkUtils
 import retrofit2.Call
@@ -24,24 +25,16 @@ class FilmViewModel : ViewModel() {
     private val selectedFilmData = MutableLiveData<Film>()
     private val errorLiveData = MutableLiveData<String>()
     private val loadingLiveData = MutableLiveData<Boolean>()
+    private val favoriteUpdatedLiveData = MutableLiveData<Int>()
 
     init {
-        val task = Runnable {
-            Db.getInstance(App.instance)?.getFilmDao()?.getAll()?.let {
-                filmsLiveData.postValue(it)
-            }
-            Db.getInstance(App.instance)?.getFilmDao()?.getFavorites()?.let {
-                favoritesLiveData.postValue(it)
-            }
-        }
-        Executors.newSingleThreadScheduledExecutor()
-            .schedule(task, 20, TimeUnit.MILLISECONDS)
+        updateFilm(null)
         loadingLiveData.postValue(false)
+        favoriteUpdatedLiveData.postValue(0)
     }
 
     companion object {
         var page = 0
-        const val TAG = "View_Model"
     }
 
     val films: LiveData<List<Film>>
@@ -63,6 +56,72 @@ class FilmViewModel : ViewModel() {
         errorLiveData.postValue(null)
     }
 
+    private fun saveFilmsToDb(films: List<BestMovie?>) {
+        val task = Runnable {
+            for (movie in films) {
+                movie?.let {
+                    if (!it.title.equals("Your Name")) {
+                        var path: String? = movie.posterPath
+                        var bigPath: String? = null
+                        path?.let { p ->
+                            if (!p.startsWith(
+                                    NetworkUtils.BASE_POSTER_URL + NetworkUtils.SMALL_POSTER_SIZE
+                                )
+                            ) {
+                                path =
+                                    NetworkUtils.BASE_POSTER_URL + NetworkUtils.SMALL_POSTER_SIZE + p
+                                bigPath = NetworkUtils.BASE_POSTER_URL +
+                                        NetworkUtils.BIG_POSTER_SIZE + p
+                            }
+                        }
+                        val film = Db.getInstance(App.instance)?.getFilmDao()
+                            ?.getById(movie.id)
+                        film?.let {
+                            Db.getInstance(App.instance)?.getFilmDao()
+                                ?.updateFilm(
+                                    Film(
+                                        movie.id,
+                                        movie.title,
+                                        movie.overview,
+                                        path,
+                                        bigPath,
+                                        (movie.popularity?.times(1000))?.toInt()
+                                            ?: 0,
+                                        film.isOK,
+                                        film.isFavorite,
+                                        film.comment
+                                    )
+                                )
+                        } ?: run {
+                            Db.getInstance(App.instance)?.getFilmDao()
+                                ?.insertFilm(
+                                    Film(
+                                        movie.id,
+                                        movie.title,
+                                        movie.overview,
+                                        path,
+                                        bigPath,
+                                        (movie.popularity?.times(1000))?.toInt()
+                                            ?: 0
+                                    )
+                                )
+                        }
+                    }
+                }
+            }
+            Db.getInstance(App.instance)?.getFilmDao()?.getAll()?.let {
+                filmsLiveData.postValue(it)
+            }
+        }
+        Executors.newSingleThreadScheduledExecutor()
+            .schedule(task, 20, TimeUnit.MILLISECONDS)
+    }
+
+    fun refreshData() {
+        page = 0
+        loadData()
+    }
+
     fun loadData() {
         loadingLiveData.postValue(true)
         App.instance.api.getMovies(
@@ -77,61 +136,7 @@ class FilmViewModel : ViewModel() {
                     response.body()?.apply {
                         Log.d(MainActivity.TAG, "Films list size: ${this.movies?.size}")
                         this.movies?.let {
-                            val task = Runnable {
-                                for (movie in it) {
-                                    movie?.let {
-                                        if (!it.title.equals("Your Name")) {
-                                            var path: String? = movie.posterPath
-                                            var bigPath: String? = null
-                                            path?.let { p ->
-                                                if (!p.startsWith(
-                                                        NetworkUtils.BASE_POSTER_URL + NetworkUtils.SMALL_POSTER_SIZE
-                                                    )
-                                                ) {
-                                                    path =
-                                                        NetworkUtils.BASE_POSTER_URL + NetworkUtils.SMALL_POSTER_SIZE + p
-                                                    bigPath = NetworkUtils.BASE_POSTER_URL +
-                                                            NetworkUtils.BIG_POSTER_SIZE + p
-                                                }
-                                            }
-                                            val film = Db.getInstance(App.instance)?.getFilmDao()
-                                                ?.getById(movie.id)
-                                            film?.let {
-                                                Db.getInstance(App.instance)?.getFilmDao()
-                                                    ?.updateFilm(
-                                                        Film(
-                                                            movie.id,
-                                                            movie.title,
-                                                            movie.overview,
-                                                            path,
-                                                            bigPath,
-                                                            (movie.popularity?.times(1000))?.toInt()
-                                                                ?: 0,
-                                                            film.isOK,
-                                                            film.isFavorite,
-                                                            film.comment
-                                                        )
-                                                    )
-                                            } ?: run {
-                                                Db.getInstance(App.instance)?.getFilmDao()
-                                                    ?.insertFilm(
-                                                        Film(
-                                                            movie.id,
-                                                            movie.title,
-                                                            movie.overview,
-                                                            path,
-                                                            bigPath,
-                                                            (movie.popularity?.times(1000))?.toInt()
-                                                                ?: 0
-                                                        )
-                                                    )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            Executors.newSingleThreadScheduledExecutor()
-                                .schedule(task, 20, TimeUnit.MILLISECONDS)
+                            saveFilmsToDb(it)
                             page++
                         }
                     }
@@ -148,6 +153,31 @@ class FilmViewModel : ViewModel() {
         })
     }
 
+    fun addToFavorite(id: Int) {
+        val task = Runnable {
+            Db.getInstance(App.instance)?.getFilmDao()?.addToFavorite(id)
+            Db.getInstance(App.instance)?.getFilmDao()?.getFavorites()?.let {
+                favoritesLiveData.postValue(it)
+            }
+        }
+        Executors.newSingleThreadScheduledExecutor().schedule(task, 20, TimeUnit.MILLISECONDS)
+    }
+
+    fun updateFilm(film: Film?) {
+        val task = Runnable {
+            film?.let {
+                Db.getInstance(App.instance)?.getFilmDao()?.updateFilm(it)
+            }
+            Db.getInstance(App.instance)?.getFilmDao()?.getAll()?.let {
+                filmsLiveData.postValue(it)
+            }
+            Db.getInstance(App.instance)?.getFilmDao()?.getFavorites()?.let {
+                favoritesLiveData.postValue(it)
+            }
+        }
+        Executors.newSingleThreadScheduledExecutor().schedule(task, 20, TimeUnit.MILLISECONDS)
+    }
+
     fun getFilmById(id: Int) {
         val task = Runnable {
             Db.getInstance(App.instance)?.getFilmDao()?.getById(id)?.let {
@@ -158,4 +188,17 @@ class FilmViewModel : ViewModel() {
             .schedule(task, 20, TimeUnit.MILLISECONDS)
     }
 
+    fun clearFilms() {
+        page = 0
+        val task = Runnable {
+            Db.getInstance(App.instance)?.getFilmDao()?.deleteAll()
+            Db.getInstance(App.instance)?.getFilmDao()?.getAll()?.let {
+                filmsLiveData.postValue(it)
+            }
+            Db.getInstance(App.instance)?.getFilmDao()?.getFavorites()?.let {
+                favoritesLiveData.postValue(it)
+            }
+        }
+        Executors.newSingleThreadScheduledExecutor().schedule(task, 20, TimeUnit.MILLISECONDS)
+    }
 }

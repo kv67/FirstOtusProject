@@ -10,7 +10,6 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import kve.ru.firstproject.R
-import kve.ru.firstproject.data.FilmData
 import kve.ru.firstproject.db.Film
 import kve.ru.firstproject.model.FilmViewModel
 
@@ -49,8 +48,6 @@ class FilmAdapter(
         }
         return dataList[position]
     }
-
-
 
     fun setData(films: List<Film>) {
         dataList.clear()

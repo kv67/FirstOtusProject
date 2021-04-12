@@ -32,4 +32,10 @@
     <string name="remove_from_favorites_msg">Фильм удален из Избранного</string>
     <string name="add_to_favorite_msg">Фильм добавлен в Избранное</string>
     <string name="undo_btn_title">ОТМЕНА</string>
+    <string name="clear_the_cache">Очистить данные</string>
+    <string name="utils">Утилиты</string>
+    <string name="clear_cache_confirmation">Вы уверены, что хотите очистить данные?</string>
+    <string name="works_only_with_films_msg">Работает только со списком фильмов</string>
+    <string name="load_data_error_msg">"Ошибка при загрузке данных: "</string>
+    <string name="repeat_caption">Повторить</string>
 </resources>

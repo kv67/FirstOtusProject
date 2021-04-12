@@ -9,10 +9,11 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import kve.ru.firstproject.R
-import kve.ru.firstproject.data.FilmData
+import kve.ru.firstproject.db.Film
 
-class FavoriteAdapter(private val dataList: MutableList<FilmData>) :
-    RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>() {
+class FavoriteAdapter : RecyclerView.Adapter<FavoriteAdapter.FavoriteViewHolder>() {
+
+    private val dataList = ArrayList<Film>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_film, parent, false)
@@ -27,7 +28,19 @@ class FavoriteAdapter(private val dataList: MutableList<FilmData>) :
         return dataList.size
     }
 
-    fun getCurrentFilmId(position: Int) = dataList[position].id
+    fun getItemByPos(position: Int): Film? {
+        if (dataList.size < position + 1) {
+            return null
+        }
+        return dataList[position]
+    }
+
+    fun setData(films: List<Film>) {
+        dataList.clear()
+        dataList.addAll(films)
+
+        notifyDataSetChanged()
+    }
 
     inner class FavoriteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val imageViewPoster = itemView.findViewById<ImageView>(R.id.imageViewPoster)
@@ -38,7 +51,7 @@ class FavoriteAdapter(private val dataList: MutableList<FilmData>) :
             imageViewStar.visibility = GONE
         }
 
-        fun bind(film: FilmData) {
+        fun bind(film: Film) {
             Glide.with(imageViewPoster.context)
                 .load(film.posterPath)
                 .placeholder(R.drawable.ic_baseline_image_24)
@@ -47,5 +60,4 @@ class FavoriteAdapter(private val dataList: MutableList<FilmData>) :
             textViewName.text = film.name
         }
     }
-
 }
