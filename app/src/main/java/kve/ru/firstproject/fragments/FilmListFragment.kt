@@ -25,9 +25,6 @@ class FilmListFragment : Fragment() {
     private val viewModel by lazy {
         ViewModelProvider(requireActivity())[FilmViewModel::class.java]
     }
-    private val pullToRefresh by lazy {
-        view?.findViewById<SwipeRefreshLayout>(R.id.pullToRefresh)
-    }
 
     private var recyclerViewFilms: RecyclerView? = null
     private var filmAdapter: FilmAdapter? = null
@@ -61,9 +58,13 @@ class FilmListFragment : Fragment() {
             filmAdapter?.setData(films)
         })
 
-        pullToRefresh?.setOnRefreshListener {
-            viewModel.refreshData()
-            pullToRefresh?.isRefreshing = false
+        val pullToRefresh = view.findViewById<SwipeRefreshLayout>(R.id.pullToRefresh)
+        pullToRefresh?.let {
+            it.setProgressViewEndTarget(false, 0)
+            it.setOnRefreshListener {
+                viewModel.refreshData()
+                pullToRefresh.isRefreshing = false
+            }
         }
     }
 
