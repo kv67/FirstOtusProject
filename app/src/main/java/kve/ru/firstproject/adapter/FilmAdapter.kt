@@ -14,15 +14,10 @@ import kve.ru.firstproject.db.Film
 import kve.ru.firstproject.model.FilmViewModel
 
 class FilmAdapter(
-    private val listener: OnFilmClickListener?
-) :
-    RecyclerView.Adapter<FilmAdapter.FilmViewHolder>() {
-
-    interface OnFilmClickListener {
-        fun onFilmClick(position: Int)
-        fun onStarClick(position: Int)
-        fun onReachEnd()
-    }
+    private val filmListener: ((filmId: Int) -> Unit),
+    private val starListener: ((position: Int) -> Unit),
+    private val reachEndListener: (() -> Unit)
+) : RecyclerView.Adapter<FilmAdapter.FilmViewHolder>() {
 
     private val dataList = ArrayList<Film>()
 
@@ -33,7 +28,7 @@ class FilmAdapter(
 
     override fun onBindViewHolder(holder: FilmViewHolder, position: Int) {
         if (dataList.size >= 20 && position == FilmViewModel.page * 20 - 8) {
-            listener?.onReachEnd()
+            reachEndListener.invoke()
         }
         holder.bind(dataList[position])
     }
@@ -63,10 +58,10 @@ class FilmAdapter(
 
         init {
             imageViewPoster.setOnClickListener {
-                listener?.onFilmClick(adapterPosition)
+                filmListener.invoke(dataList[adapterPosition].id)
             }
             imageViewStar.setOnClickListener {
-                listener?.onStarClick(adapterPosition)
+                starListener.invoke(adapterPosition)
             }
         }
 

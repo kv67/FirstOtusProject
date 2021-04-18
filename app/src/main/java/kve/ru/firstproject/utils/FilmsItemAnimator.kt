@@ -4,8 +4,8 @@ import android.animation.ValueAnimator
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.animation.AnimationUtils.DECELERATE_INTERPOLATOR
-import kve.ru.firstproject.MainActivity.Companion.STAR_ANIMATE
 import kve.ru.firstproject.adapter.FilmAdapter
+import kve.ru.firstproject.fragments.FilmListFragment.Companion.STAR_ANIMATE
 
 class FilmsItemAnimator : DefaultItemAnimator() {
 

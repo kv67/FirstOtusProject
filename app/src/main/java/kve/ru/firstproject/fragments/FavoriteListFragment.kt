@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.R
 import kve.ru.firstproject.adapter.FavoriteAdapter
 import kve.ru.firstproject.model.FilmViewModel
@@ -26,11 +27,6 @@ class FavoriteListFragment : Fragment() {
     }
 
     private var recyclerViewFavorites: RecyclerView? = null
-    private var favoriteAdapter: FavoriteAdapter? = null
-
-    interface OnRemoveListener {
-        fun onRemove(position: Int)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,22 +39,31 @@ class FavoriteListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         requireActivity().title = getString(R.string.favorites)
-        favoriteAdapter = FavoriteAdapter()
         recyclerViewFavorites =
             view.findViewById<RecyclerView>(R.id.recyclerViewFavoriteFragment).apply {
-                adapter = favoriteAdapter
+                adapter = FavoriteAdapter()
                 layoutManager = GridLayoutManager(requireContext(), getColumnCount())
                 addItemDecoration(FavoriteItemDecoration(requireContext(), 15))
             }
 
         initTouchHelper {
-            (activity as? OnRemoveListener)?.onRemove(it)
+            (recyclerViewFavorites?.adapter as FavoriteAdapter).getItemByPos(it)?.let { film ->
+                film.isFavorite = 0
+                viewModel.updateFilm(film)
+                MainActivity.showSnackBar(
+                    requireView(),
+                    getString(R.string.remove_from_favorites_msg),
+                    getString(R.string.undo_btn_title)
+                ) {
+                    film.isFavorite = 1
+                    viewModel.updateFilm(film)
+                }
+            }
         }
 
         viewModel.favorites.observe(viewLifecycleOwner, { favorites ->
-            favoriteAdapter?.setData(favorites)
+            (recyclerViewFavorites?.adapter as FavoriteAdapter).setData(favorites)
         })
-
     }
 
     private fun initTouchHelper(listener: ((id: Int) -> Unit)?) {
@@ -87,9 +92,5 @@ class FavoriteListFragment : Fragment() {
         requireActivity().windowManager.defaultDisplay.getMetrics(displayMetrics)
         val width: Int = (displayMetrics.widthPixels / displayMetrics.density).toInt()
         return if (width / 185 > 2) width / 185 else 2
-    }
-
-    fun getFavoriteListAdapter(): FavoriteAdapter? {
-        return favoriteAdapter
     }
 }

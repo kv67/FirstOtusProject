@@ -1,9 +1,7 @@
 package kve.ru.firstproject.db
 
 import android.content.Context
-import android.util.Log
 import androidx.room.Room
-import kve.ru.firstproject.model.FilmViewModel
 
 object Db {
     private var INSTANCE: AppDb? = null
@@ -21,10 +19,4 @@ object Db {
         }
         return INSTANCE
     }
-
-    fun destroyInstance() {
-        INSTANCE?.close()
-        INSTANCE = null
-    }
-
 }

@@ -7,7 +7,6 @@ import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.Intent
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.view.MenuItem
 import android.view.View
 import android.widget.ProgressBar
@@ -21,22 +20,17 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
-import kve.ru.firstproject.adapter.FavoriteAdapter
-import kve.ru.firstproject.adapter.FilmAdapter
-import kve.ru.firstproject.db.Film
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
 import kve.ru.firstproject.fragments.FavoriteListFragment
 import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.fragments.FilmListFragment
 import kve.ru.firstproject.model.FilmViewModel
+import kve.ru.firstproject.utils.FeatureToggles
 
-class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
-    FavoriteListFragment.OnRemoveListener, NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
-        const val TAG = "Main_Activity"
-        const val POSITION = "POSITION"
-        const val STAR_ANIMATE = "STAR_ANIMATE"
-
         fun doExit(activity: Activity) {
             val bld: AlertDialog.Builder = AlertDialog.Builder(activity)
             val lst =
@@ -55,22 +49,29 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         }
 
         fun showSnackBar(
-            curView: View,
+            curView: View?,
             message: String,
             buttonCaption: String,
             listener: (() -> Unit)?
         ) {
-            Snackbar.make(curView, message, Snackbar.LENGTH_LONG).apply {
-                view.setBackgroundColor(ContextCompat.getColor(context, R.color.colorPrimaryDark))
-                setAction(buttonCaption) {
-                    listener?.let { it() }
+            curView?.let {
+                Snackbar.make(curView, message, Snackbar.LENGTH_LONG).apply {
+                    view.setBackgroundColor(
+                        ContextCompat.getColor(
+                            context,
+                            R.color.colorPrimaryDark
+                        )
+                    )
+                    setAction(buttonCaption) {
+                        listener?.invoke()
+                    }
+                    show()
                 }
-                show()
             }
         }
     }
 
-    private var curPosition: Int = -1
+    private val remoteConfig = Firebase.remoteConfig
     private val drawer by lazy {
         findViewById<DrawerLayout>(R.id.drawer_layout)
     }
@@ -94,6 +95,21 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         setSupportActionBar(toolbar)
         initDrawer()
 
+        viewModel.isSelected.observe(this, { selected ->
+            selected?.let {
+                if (it) {
+                    supportFragmentManager.beginTransaction()
+                        .replace(
+                            R.id.fragmentContainer,
+                            FilmDetailFragment(),
+                            FilmDetailFragment.TAG
+                        )
+                        .addToBackStack(null)
+                        .commit()
+                }
+            }
+        })
+
         viewModel.loading.observe(this, {
             if (it) {
                 progressBarLoading.visibility = View.VISIBLE
@@ -114,9 +130,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
             }
         })
 
-        savedInstanceState?.let {
-            curPosition = it.getInt(POSITION)
-        } ?: run {
+        savedInstanceState ?: run {
             viewModel.loadData()
             showFilmList()
         }
@@ -142,58 +156,13 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         navigationView.getHeaderView(0)
             .setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark))
         navigationView.menu.findItem(R.id.nav_home).isChecked = true
-    }
-
-    private fun getCurrentFilm(position: Int): Film? {
-        getFragmentFilmListAdapter()?.let { adapter ->
-            adapter.getItemByPos(position)?.let {
-                return it
-            }
-        }
-        return null
-    }
-
-    private fun getFragmentFilmListAdapter(): FilmAdapter? {
-        (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as FilmListFragment?)
-            ?.getFilmListAdapter()?.let {
-                return it
-            }
-        return null
-    }
-
-    private fun getCurrentFavorite(position: Int): Film? {
-        getFragmentFavoriteListAdapter()?.let { adapter ->
-            adapter.getItemByPos(position)?.let {
-                return it
-            }
-        }
-        return null
-    }
-
-    private fun getFragmentFavoriteListAdapter(): FavoriteAdapter? {
-        (supportFragmentManager.findFragmentByTag(FavoriteListFragment.TAG) as FavoriteListFragment?)
-            ?.getFavoriteListAdapter()?.let {
-                return it
-            }
-        return null
+        navigationView.menu.findItem(R.id.nav_delete_cache).isVisible =
+            remoteConfig.getBoolean(FeatureToggles.CACHE_CLEAR_ENABLED)
     }
 
     override fun onBackPressed() {
         val fragment = supportFragmentManager.fragments.last()
         if (supportFragmentManager.backStackEntryCount > 0) {
-            if (fragment.tag == FilmDetailFragment.TAG) {
-                (fragment as FilmDetailFragment).apply {
-                    getCurrentFilm(curPosition)?.let { film ->
-                        this.getComment()?.let {
-                            film.comment = it.toString()
-                        }
-                        this.isOk()?.let {
-                            film.isOK = if (it) 1 else 0
-                        }
-                        viewModel.updateFilm(film)
-                    }
-                }
-            }
             if (fragment.tag != FilmListFragment.TAG) {
                 navigationView.menu.findItem(R.id.nav_home).isChecked = true
                 navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
@@ -214,65 +183,6 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
             bld.setPositiveButton(getString(R.string.positive_button), lst)
             val dialog: AlertDialog = bld.create()
             dialog.show()
-        }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
-        super.onSaveInstanceState(outState, outPersistentState)
-        outState.putInt(POSITION, curPosition)
-    }
-
-    override fun onFilmClick(position: Int) {
-        getFragmentFilmListAdapter()?.let { adapter ->
-            adapter.getItemByPos(position)?.let { film ->
-                curPosition = position
-                supportFragmentManager.beginTransaction()
-                    .replace(
-                        R.id.fragmentContainer,
-                        FilmDetailFragment.newInstance(film.id),
-                        FilmDetailFragment.TAG
-                    )
-                    .addToBackStack(null)
-                    .commit()
-                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = false
-            }
-        }
-    }
-
-    override fun onStarClick(position: Int) {
-        getCurrentFilm(position)?.let {
-            it.isFavorite = if (it.isFavorite == 0) 1 else 0
-            if (it.isFavorite == 1) {
-                viewModel.addToFavorite(it.id)
-                getFragmentFilmListAdapter()?.notifyItemChanged(position, STAR_ANIMATE)
-            } else {
-                viewModel.updateFilm(it)
-            }
-            showSnackBar(
-                findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment),
-                if (it.isFavorite == 1) getString(R.string.add_to_favorite_msg)
-                else getString(R.string.remove_from_favorites_msg),
-                getString(R.string.undo_btn_title)
-            ) { onStarClick(position) }
-        }
-    }
-
-    override fun onReachEnd() {
-        viewModel.loadData()
-    }
-
-    override fun onRemove(position: Int) {
-        getCurrentFavorite(position)?.let {
-            it.isFavorite = 0
-            viewModel.updateFilm(it)
-            showSnackBar(
-                findViewById<RecyclerView>(R.id.recyclerViewFavoriteFragment),
-                getString(R.string.remove_from_favorites_msg),
-                getString(R.string.undo_btn_title)
-            ) {
-                it.isFavorite = 1
-                viewModel.updateFilm(it)
-            }
         }
     }
 

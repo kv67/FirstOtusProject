@@ -10,16 +10,22 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.R
 import kve.ru.firstproject.adapter.FilmAdapter
+import kve.ru.firstproject.db.Film
 import kve.ru.firstproject.model.FilmViewModel
 import kve.ru.firstproject.utils.FavoriteItemDecoration
+import kve.ru.firstproject.utils.FeatureToggles
 import kve.ru.firstproject.utils.FilmsItemAnimator
 
 class FilmListFragment : Fragment() {
 
     companion object {
         const val TAG = "FilmListFragment"
+        const val STAR_ANIMATE = "STAR_ANIMATE"
     }
 
     private val viewModel by lazy {
@@ -27,8 +33,6 @@ class FilmListFragment : Fragment() {
     }
 
     private var recyclerViewFilms: RecyclerView? = null
-    private var filmAdapter: FilmAdapter? = null
-    private var filmLayoutManager: GridLayoutManager? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,22 +44,24 @@ class FilmListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        requireActivity().title = getString(R.string.app_name)
+        requireActivity().title =
+            Firebase.remoteConfig.getString(FeatureToggles.APP_TITLE)
         setHasOptionsMenu(true)
 
         recyclerViewFilms = view.findViewById(R.id.recyclerViewFilmsFragment)
-        filmAdapter = FilmAdapter(activity as FilmAdapter.OnFilmClickListener)
-        filmLayoutManager = GridLayoutManager(requireContext(), getColumnCount())
-
         recyclerViewFilms?.apply {
-            adapter = filmAdapter
-            layoutManager = filmLayoutManager
+            adapter = FilmAdapter(
+                { id -> viewModel.getFilmById(id) },
+                { position -> onStarClick(position) },
+                { viewModel.loadData() }
+            )
+            layoutManager = GridLayoutManager(requireContext(), getColumnCount())
             addItemDecoration(FavoriteItemDecoration(requireContext(), 15))
             itemAnimator = FilmsItemAnimator()
         }
 
         viewModel.films.observe(viewLifecycleOwner, { films ->
-            filmAdapter?.setData(films)
+            (recyclerViewFilms?.adapter as FilmAdapter).setData(films)
         })
 
         val pullToRefresh = view.findViewById<SwipeRefreshLayout>(R.id.pullToRefresh)
@@ -68,14 +74,28 @@ class FilmListFragment : Fragment() {
         }
     }
 
+    private fun onStarClick(position: Int) {
+        val flm: Film? = (recyclerViewFilms?.adapter as FilmAdapter).getItemByPos(position)
+        flm?.let {
+            it.isFavorite = if (it.isFavorite == 0) 1 else 0
+            if (it.isFavorite == 1) {
+                viewModel.addToFavorite(it.id)
+                recyclerViewFilms?.adapter?.notifyItemChanged(position, STAR_ANIMATE)
+            } else {
+                viewModel.updateFilm(it)
+                MainActivity.showSnackBar(
+                    requireView(),
+                    getString(R.string.remove_from_favorites_msg),
+                    getString(R.string.undo_btn_title)
+                ) { onStarClick(position) }
+            }
+        }
+    }
+
     private fun getColumnCount(): Int {
         val displayMetrics = DisplayMetrics()
         requireActivity().windowManager.defaultDisplay.getMetrics(displayMetrics)
         val width: Int = (displayMetrics.widthPixels / displayMetrics.density).toInt()
         return if (width / 185 > 2) width / 185 else 2
-    }
-
-    fun getFilmListAdapter(): FilmAdapter? {
-        return filmAdapter
     }
 }

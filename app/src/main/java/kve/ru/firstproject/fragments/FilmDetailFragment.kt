@@ -12,22 +12,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import kve.ru.firstproject.R
+import kve.ru.firstproject.db.Film
 import kve.ru.firstproject.model.FilmViewModel
 
 class FilmDetailFragment : Fragment() {
 
     companion object {
         const val TAG = "FilmDetailFragment"
-        private const val EXTRA_FILM_ID = "EXTRA_FILM_ID"
-
-        fun newInstance(id: Int): FilmDetailFragment {
-            return FilmDetailFragment().apply {
-                arguments = Bundle().apply {
-                    putInt(EXTRA_FILM_ID, id)
-                }
-            }
-        }
     }
+
+    private var currentFilm: Film? = null
 
     private val imageViewPoster by lazy {
         view?.findViewById<ImageView>(R.id.imageViewPoster)
@@ -56,6 +50,7 @@ class FilmDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewModel.selectedFilm.observe(viewLifecycleOwner, {
             it?.let {
+                currentFilm = it
                 requireActivity().title = it.name
                 editTextComment?.setText(it.comment)
                 checkBoxLike?.isChecked = it.isOK == 1
@@ -69,13 +64,16 @@ class FilmDetailFragment : Fragment() {
                 }
             }
         })
-
-        arguments?.getInt(EXTRA_FILM_ID)?.let {
-            viewModel.getFilmById(it)
-        }
     }
 
-    fun getComment() = editTextComment?.text
-
-    fun isOk() = checkBoxLike?.isChecked
+    override fun onDetach() {
+        currentFilm?.apply {
+            comment = editTextComment?.text.toString()
+            checkBoxLike?.let {
+                isOK = if (it.isChecked) 1 else 0
+            }
+            viewModel.updateFilm(this)
+        }
+        super.onDetach()
+    }
 }
