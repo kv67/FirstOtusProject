@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Хиты видео-салонов 90х…</string>
+    <string name="app_name">Фильмы</string>
     <string name="film_poster">Постер</string>
     <string name="blood_sport">Кровавый спорт</string>
     <string name="button_details">Детали</string>
@@ -32,4 +32,10 @@
     <string name="remove_from_favorites_msg">Фильм удален из Избранного</string>
     <string name="add_to_favorite_msg">Фильм добавлен в Избранное</string>
     <string name="undo_btn_title">ОТМЕНА</string>
+    <string name="clear_the_cache">Очистить данные</string>
+    <string name="utils">Утилиты</string>
+    <string name="clear_cache_confirmation">Вы уверены, что хотите очистить данные?</string>
+    <string name="works_only_with_films_msg">Работает только со списком фильмов</string>
+    <string name="load_data_error_msg">"Ошибка при загрузке данных: "</string>
+    <string name="repeat_caption">Повторить</string>
 </resources>

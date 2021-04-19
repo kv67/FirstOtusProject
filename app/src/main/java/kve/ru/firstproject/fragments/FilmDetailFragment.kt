@@ -8,25 +8,20 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import com.bumptech.glide.Glide
 import kve.ru.firstproject.R
-import kve.ru.firstproject.data.FilmData
+import kve.ru.firstproject.db.Film
+import kve.ru.firstproject.model.FilmViewModel
 
 class FilmDetailFragment : Fragment() {
 
     companion object {
         const val TAG = "FilmDetailFragment"
-        private const val EXTRA_FILM = "EXTRA_FILM"
-
-        fun newInstance(film: FilmData): FilmDetailFragment {
-            return FilmDetailFragment().apply {
-                arguments = Bundle().apply {
-                    putParcelable(EXTRA_FILM, film)
-                }
-            }
-        }
     }
+
+    private var currentFilm: Film? = null
 
     private val imageViewPoster by lazy {
         view?.findViewById<ImageView>(R.id.imageViewPoster)
@@ -40,6 +35,9 @@ class FilmDetailFragment : Fragment() {
     private val editTextComment by lazy {
         view?.findViewById<EditText>(R.id.editTextComment)
     }
+    private val viewModel by lazy {
+        ViewModelProvider(requireActivity())[FilmViewModel::class.java]
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -50,23 +48,32 @@ class FilmDetailFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val filmData = arguments?.getParcelable<FilmData>(EXTRA_FILM)
-        filmData?.let {
-            requireActivity().title = it.name
-            editTextComment?.setText(it.comment)
-            checkBoxLike?.isChecked = it.isOK
-            textViewDsc?.text = it.dsc
-            imageViewPoster?.setImageResource(it.img)
-        }
-
-        val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
-        filmData?.let {
-            toolbar.title = it.name
-        } ?: run { toolbar.title = getString(R.string.no_name_film) }
+        viewModel.selectedFilm.observe(viewLifecycleOwner, {
+            it?.let {
+                currentFilm = it
+                requireActivity().title = it.name
+                editTextComment?.setText(it.comment)
+                checkBoxLike?.isChecked = it.isOK == 1
+                textViewDsc?.text = it.dsc
+                imageViewPoster?.let { img ->
+                    Glide.with(img.context)
+                        .load(it.bigPosterPath)
+                        .placeholder(R.drawable.ic_baseline_image_24)
+                        .error(R.drawable.ic_baseline_error_24)
+                        .into(img)
+                }
+            }
+        })
     }
 
-    fun getComment() = editTextComment?.text
-
-    fun isOk() = checkBoxLike?.isChecked
-
+    override fun onDetach() {
+        currentFilm?.apply {
+            comment = editTextComment?.text.toString()
+            checkBoxLike?.let {
+                isOK = if (it.isChecked) 1 else 0
+            }
+            viewModel.updateFilm(this)
+        }
+        super.onDetach()
+    }
 }

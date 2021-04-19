@@ -6,57 +6,32 @@ import android.content.DialogInterface
 import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.media.ThumbnailUtils
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
+import android.widget.ProgressBar
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
-import kve.ru.firstproject.adapter.FilmAdapter
-import kve.ru.firstproject.data.FilmData
-import kve.ru.firstproject.data.FilmList
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
 import kve.ru.firstproject.fragments.FavoriteListFragment
 import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.fragments.FilmListFragment
+import kve.ru.firstproject.model.FilmViewModel
+import kve.ru.firstproject.utils.FeatureToggles
 
-class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
-    FavoriteListFragment.OnRemoveListener, NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
-        const val FILMS = "FILMS"
-        const val POSITION = "POSITION"
-        const val STAR_ANIMATE = "STAR_ANIMATE"
-        const val BLOOD_SPORT = 1
-        const val COCKTAIL = 2
-        const val COMMANDO = 3
-        const val EMMANUELLE = 4
-
-        private lateinit var BLOOD_SPORT_BMP: Bitmap
-        private lateinit var COCKTAIL_BMP: Bitmap
-        private lateinit var COMMANDO_BMP: Bitmap
-        private lateinit var EMMANUELLE_BMP: Bitmap
-
-        fun getFilmPoster(id: Int): Bitmap? {
-            return when (id) {
-                BLOOD_SPORT -> BLOOD_SPORT_BMP
-                COCKTAIL -> COCKTAIL_BMP
-                COMMANDO -> COMMANDO_BMP
-                EMMANUELLE -> EMMANUELLE_BMP
-                else -> null
-            }
-        }
-
         fun doExit(activity: Activity) {
-
             val bld: AlertDialog.Builder = AlertDialog.Builder(activity)
             val lst =
                 DialogInterface.OnClickListener { dialog: DialogInterface, which ->
@@ -74,22 +49,29 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         }
 
         fun showSnackBar(
-            curView: View,
+            curView: View?,
             message: String,
+            buttonCaption: String,
             listener: (() -> Unit)?
         ) {
-            Snackbar.make(curView, message, Snackbar.LENGTH_LONG).apply {
-                view.setBackgroundColor(ContextCompat.getColor(context, R.color.colorPrimaryDark))
-                setAction(context.getString(R.string.undo_btn_title)) {
-                    listener?.let { it() }
+            curView?.let {
+                Snackbar.make(curView, message, Snackbar.LENGTH_LONG).apply {
+                    view.setBackgroundColor(
+                        ContextCompat.getColor(
+                            context,
+                            R.color.colorPrimaryDark
+                        )
+                    )
+                    setAction(buttonCaption) {
+                        listener?.invoke()
+                    }
+                    show()
                 }
-                show()
             }
         }
     }
 
-    private var curPosition: Int = -1
-    private lateinit var films: MutableList<FilmData>
+    private val remoteConfig = Firebase.remoteConfig
     private val drawer by lazy {
         findViewById<DrawerLayout>(R.id.drawer_layout)
     }
@@ -99,6 +81,12 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
     private val navigationView by lazy {
         findViewById<NavigationView>(R.id.nav_view)
     }
+    private val progressBarLoading by lazy {
+        findViewById<ProgressBar>(R.id.progressBarLoading)
+    }
+    private val viewModel by lazy {
+        ViewModelProvider(this)[FilmViewModel::class.java]
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,17 +95,43 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         setSupportActionBar(toolbar)
         initDrawer()
 
-        savedInstanceState?.getParcelable<FilmList>(FILMS)?.let {
-            films = it.films
-        } ?: run {
-            initData()
-        }
+        viewModel.isSelected.observe(this, { selected ->
+            selected?.let {
+                if (it) {
+                    supportFragmentManager.beginTransaction()
+                        .replace(
+                            R.id.fragmentContainer,
+                            FilmDetailFragment(),
+                            FilmDetailFragment.TAG
+                        )
+                        .addToBackStack(null)
+                        .commit()
+                }
+            }
+        })
 
-        savedInstanceState?.getInt(POSITION)?.let {
-            curPosition = it
-        }
+        viewModel.loading.observe(this, {
+            if (it) {
+                progressBarLoading.visibility = View.VISIBLE
+            } else {
+                progressBarLoading.visibility = View.INVISIBLE
+            }
+        })
+
+        viewModel.error.observe(this, {
+            progressBarLoading.visibility = View.INVISIBLE
+            it?.let {
+                showSnackBar(
+                    findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment),
+                    getString(R.string.load_data_error_msg) + it,
+                    getString(R.string.repeat_caption)
+                ) { viewModel.loadData() }
+                viewModel.clearErrors()
+            }
+        })
 
         savedInstanceState ?: run {
+            viewModel.loadData()
             showFilmList()
         }
     }
@@ -126,7 +140,7 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.fragmentContainer,
-                FilmListFragment.newInstance(films as ArrayList<FilmData>),
+                FilmListFragment(),
                 FilmListFragment.TAG
             )
             .commit()
@@ -141,59 +155,19 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         navigationView.setNavigationItemSelectedListener(this)
         navigationView.getHeaderView(0)
             .setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark))
-    }
-
-    private fun initData() {
-        var bitmap = BitmapFactory.decodeResource(resources, R.drawable.bloodsport)
-        BLOOD_SPORT_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
-        bitmap = BitmapFactory.decodeResource(resources, R.drawable.cocktail)
-        COCKTAIL_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
-        bitmap = BitmapFactory.decodeResource(resources, R.drawable.commando)
-        COMMANDO_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
-        bitmap = BitmapFactory.decodeResource(resources, R.drawable.emmanuelle)
-        EMMANUELLE_BMP = ThumbnailUtils.extractThumbnail(bitmap, 169, 229)
-
-        films = mutableListOf(
-            FilmData(
-                BLOOD_SPORT, getString(R.string.blood_sport),
-                getString(R.string.blood_sport_dsc), R.drawable.bloodsport,
-                "", isOK = false, selected = false, isFavorite = false
-            ),
-            FilmData(
-                COCKTAIL, getString(R.string.cocktail),
-                getString(R.string.cocktail_dsc), R.drawable.cocktail,
-                "", isOK = false, selected = false, isFavorite = false
-            ),
-            FilmData(
-                COMMANDO, getString(R.string.commando),
-                getString(R.string.commando_dsc), R.drawable.commando,
-                "", isOK = false, selected = false, isFavorite = false
-            ),
-            FilmData(
-                EMMANUELLE, getString(R.string.emmanuelle),
-                getString(R.string.emmanuelle_dsc), R.drawable.emmanuelle,
-                "", isOK = false, selected = false, isFavorite = false
-            )
-        )
+        navigationView.menu.findItem(R.id.nav_home).isChecked = true
+        navigationView.menu.findItem(R.id.nav_delete_cache).isVisible =
+            remoteConfig.getBoolean(FeatureToggles.CACHE_CLEAR_ENABLED)
     }
 
     override fun onBackPressed() {
         val fragment = supportFragmentManager.fragments.last()
         if (supportFragmentManager.backStackEntryCount > 0) {
-            if (fragment.tag == FilmDetailFragment.TAG) {
-                (fragment as FilmDetailFragment).getComment()?.let {
-                    films[curPosition].comment = it.toString()
-                }
-                fragment.isOk()?.let {
-                    films[curPosition].isOK = it
-                }
-            }
             if (fragment.tag != FilmListFragment.TAG) {
-                val menuItem = navigationView.menu.findItem(R.id.nav_home)
-                menuItem.isChecked = true
+                navigationView.menu.findItem(R.id.nav_home).isChecked = true
+                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
+                super.onBackPressed()
             }
-
-            super.onBackPressed()
         } else {
             val bld: AlertDialog.Builder = AlertDialog.Builder(this)
             val lst =
@@ -212,74 +186,16 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putParcelable(FILMS, FilmList(films))
-        outState.putInt(POSITION, curPosition)
-    }
-
-    override fun onFilmClick(position: Int) {
-        curPosition = position
-        supportFragmentManager.beginTransaction()
-            .replace(
-                R.id.fragmentContainer,
-                FilmDetailFragment.newInstance(films[position]),
-                FilmDetailFragment.TAG
-            )
-            .addToBackStack(null)
-            .commit()
-    }
-
-    override fun onStarClick(position: Int) {
-
-        films[position].isFavorite = !films[position].isFavorite
-        (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as? FilmListFragment)
-            ?.notifyItemChanged(
-                position,
-                STAR_ANIMATE
-            )
-
-        showSnackBar(
-            findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment),
-            if (films[position].isFavorite) getString(R.string.add_to_favorite_msg)
-            else getString(R.string.remove_from_favorites_msg)
-        ) { onStarClick(position) }
-    }
-
-    override fun onRemove(id: Int) {
-        val position = films.indexOf(films.firstOrNull { it.id == id })
-        if (position > -1) {
-            films[position].isFavorite = false
-            (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as? FilmListFragment)
-                ?.notifyItemChanged(
-                    position,
-                    null
-                )
-            showSnackBar(
-                findViewById<RecyclerView>(R.id.recyclerViewFavoriteFragment),
-                getString(R.string.remove_from_favorites_msg)
-            ) {
-                films[position].isFavorite = true
-                (supportFragmentManager.findFragmentByTag(FilmListFragment.TAG) as? FilmListFragment)
-                    ?.notifyItemChanged(
-                        position,
-                        null
-                    )
-                (supportFragmentManager.findFragmentByTag(FavoriteListFragment.TAG) as? FavoriteListFragment)
-                    ?.addRemovedFilm(
-                        films[position]
-                    )
-            }
-        }
-    }
-
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         val fragment = supportFragmentManager.fragments.last()
         when (item.itemId) {
             R.id.nav_home -> {
-                if (fragment.tag != FilmListFragment.TAG) {
+                if (fragment.tag != FilmListFragment.TAG &&
+                    supportFragmentManager.backStackEntryCount > 0
+                ) {
                     onBackPressed()
                 }
+                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
             }
             R.id.nav_favorites -> {
                 if (fragment.tag != FavoriteListFragment.TAG) {
@@ -289,14 +205,13 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
                     supportFragmentManager.beginTransaction()
                         .replace(
                             R.id.fragmentContainer,
-                            FavoriteListFragment.newInstance(
-                                (films.filter { it.isFavorite }) as ArrayList<FilmData>
-                            ),
+                            FavoriteListFragment(),
                             FavoriteListFragment.TAG
                         )
                         .addToBackStack(null)
                         .commit()
                 }
+                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = false
             }
             R.id.nav_message -> {
                 Intent(Intent.ACTION_SEND).apply {
@@ -307,6 +222,25 @@ class MainActivity : AppCompatActivity(), FilmAdapter.OnFilmClickListener,
             }
             R.id.nav_exit -> {
                 doExit(this)
+            }
+            R.id.nav_delete_cache -> {
+                val bld: AlertDialog.Builder = AlertDialog.Builder(this)
+                val lst =
+                    DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                        when (which) {
+                            BUTTON_NEGATIVE -> dialog.dismiss()
+                            BUTTON_POSITIVE -> {
+                                viewModel.clearFilms()
+                                dialog.dismiss()
+                            }
+                        }
+                    }
+                bld.setMessage(getString(R.string.clear_cache_confirmation))
+                bld.setTitle(this.getString(R.string.clear_the_cache))
+                bld.setNegativeButton(this.getString(R.string.negative_button), lst)
+                bld.setPositiveButton(this.getString(R.string.positive_button), lst)
+                val dialog: AlertDialog = bld.create()
+                dialog.show()
             }
         }
 

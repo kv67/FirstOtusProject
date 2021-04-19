@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "635989435801",
+    "project_id": "best-films-512dc",
+    "storage_bucket": "best-films-512dc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635989435801:android:d8d912e82cdf3bb81b9f08",
+        "android_client_info": {
+          "package_name": "kve.ru.firstproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "635989435801-r4nerga0sl71gi94cl8ncd172cimqk6o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClXDIdaCbW28VVjdZwOGqtPOOh9uadCZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "635989435801-r4nerga0sl71gi94cl8ncd172cimqk6o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

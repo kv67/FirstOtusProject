@@ -6,28 +6,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.R
 import kve.ru.firstproject.adapter.FilmAdapter
-import kve.ru.firstproject.data.FilmData
-import kve.ru.firstproject.data.FilmList
+import kve.ru.firstproject.db.Film
+import kve.ru.firstproject.model.FilmViewModel
 import kve.ru.firstproject.utils.FavoriteItemDecoration
+import kve.ru.firstproject.utils.FeatureToggles
 import kve.ru.firstproject.utils.FilmsItemAnimator
 
 class FilmListFragment : Fragment() {
 
     companion object {
         const val TAG = "FilmListFragment"
-        private const val EXTRA_LIST = "EXTRA_LIST"
+        const val STAR_ANIMATE = "STAR_ANIMATE"
+    }
 
-        fun newInstance(data: ArrayList<FilmData>): FilmListFragment {
-            return FilmListFragment().apply {
-                arguments = Bundle().apply {
-                    putParcelable(EXTRA_LIST, FilmList(data))
-                }
-            }
-        }
+    private val viewModel by lazy {
+        ViewModelProvider(requireActivity())[FilmViewModel::class.java]
     }
 
     private var recyclerViewFilms: RecyclerView? = null
@@ -37,19 +39,56 @@ class FilmListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        retainInstance = true
         return inflater.inflate(R.layout.fragment_film_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        requireActivity().title = getString(R.string.app_name)
+        requireActivity().title =
+            Firebase.remoteConfig.getString(FeatureToggles.APP_TITLE)
         setHasOptionsMenu(true)
 
-        recyclerViewFilms = view.findViewById<RecyclerView>(R.id.recyclerViewFilmsFragment).apply {
-            val films = arguments?.getParcelable<FilmList>(EXTRA_LIST)?.films ?: ArrayList()
-            adapter = FilmAdapter(films, (activity as? FilmAdapter.OnFilmClickListener))
+        recyclerViewFilms = view.findViewById(R.id.recyclerViewFilmsFragment)
+        recyclerViewFilms?.apply {
+            adapter = FilmAdapter(
+                { id -> viewModel.getFilmById(id) },
+                { position -> onStarClick(position) },
+                { viewModel.loadData() }
+            )
             layoutManager = GridLayoutManager(requireContext(), getColumnCount())
             addItemDecoration(FavoriteItemDecoration(requireContext(), 15))
             itemAnimator = FilmsItemAnimator()
+        }
+
+        viewModel.films.observe(viewLifecycleOwner, { films ->
+            (recyclerViewFilms?.adapter as FilmAdapter).setData(films)
+        })
+
+        val pullToRefresh = view.findViewById<SwipeRefreshLayout>(R.id.pullToRefresh)
+        pullToRefresh?.let {
+            it.setProgressViewEndTarget(false, 0)
+            it.setOnRefreshListener {
+                viewModel.refreshData()
+                pullToRefresh.isRefreshing = false
+            }
+        }
+    }
+
+    private fun onStarClick(position: Int) {
+        val flm: Film? = (recyclerViewFilms?.adapter as FilmAdapter).getItemByPos(position)
+        flm?.let {
+            it.isFavorite = if (it.isFavorite == 0) 1 else 0
+            if (it.isFavorite == 1) {
+                viewModel.addToFavorite(it.id)
+                recyclerViewFilms?.adapter?.notifyItemChanged(position, STAR_ANIMATE)
+            } else {
+                viewModel.updateFilm(it)
+                MainActivity.showSnackBar(
+                    requireView(),
+                    getString(R.string.remove_from_favorites_msg),
+                    getString(R.string.undo_btn_title)
+                ) { onStarClick(position) }
+            }
         }
     }
 
@@ -59,9 +98,4 @@ class FilmListFragment : Fragment() {
         val width: Int = (displayMetrics.widthPixels / displayMetrics.density).toInt()
         return if (width / 185 > 2) width / 185 else 2
     }
-
-    fun notifyItemChanged(position: Int, payload: Any?) {
-        recyclerViewFilms?.adapter?.notifyItemChanged(position, payload)
-    }
-
 }

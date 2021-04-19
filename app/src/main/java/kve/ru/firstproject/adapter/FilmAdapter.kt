@@ -8,20 +8,18 @@ import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.recyclerview.widget.RecyclerView
-import kve.ru.firstproject.MainActivity.Companion.getFilmPoster
+import com.bumptech.glide.Glide
 import kve.ru.firstproject.R
-import kve.ru.firstproject.data.FilmData
+import kve.ru.firstproject.db.Film
+import kve.ru.firstproject.model.FilmViewModel
 
 class FilmAdapter(
-    private val dataList: MutableList<FilmData>,
-    private val listener: OnFilmClickListener?
-) :
-    RecyclerView.Adapter<FilmAdapter.FilmViewHolder>() {
+    private val filmListener: ((filmId: Int) -> Unit),
+    private val starListener: ((position: Int) -> Unit),
+    private val reachEndListener: (() -> Unit)
+) : RecyclerView.Adapter<FilmAdapter.FilmViewHolder>() {
 
-    interface OnFilmClickListener {
-        fun onFilmClick(position: Int)
-        fun onStarClick(position: Int)
-    }
+    private val dataList = ArrayList<Film>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FilmViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_film, parent, false)
@@ -29,11 +27,28 @@ class FilmAdapter(
     }
 
     override fun onBindViewHolder(holder: FilmViewHolder, position: Int) {
+        if (dataList.size >= 20 && position == FilmViewModel.page * 20 - 8) {
+            reachEndListener.invoke()
+        }
         holder.bind(dataList[position])
     }
 
     override fun getItemCount(): Int {
         return dataList.size
+    }
+
+    fun getItemByPos(position: Int): Film? {
+        if (dataList.size < position + 1) {
+            return null
+        }
+        return dataList[position]
+    }
+
+    fun setData(films: List<Film>) {
+        dataList.clear()
+        dataList.addAll(films)
+
+        notifyDataSetChanged()
     }
 
     inner class FilmViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -43,32 +58,36 @@ class FilmAdapter(
 
         init {
             imageViewPoster.setOnClickListener {
-                listener?.onFilmClick(adapterPosition)
+                filmListener.invoke(dataList[adapterPosition].id)
             }
             imageViewStar.setOnClickListener {
-                listener?.onStarClick(adapterPosition)
+                starListener.invoke(adapterPosition)
             }
         }
 
-        fun isFavorite(): Boolean = dataList[adapterPosition].isFavorite
+        fun isFavorite(): Boolean = dataList[adapterPosition].isFavorite == 1
 
-        fun bind(film: FilmData) {
-            imageViewPoster.setImageBitmap(getFilmPoster(film.id))
+        fun bind(film: Film) {
+            Glide.with(imageViewPoster.context)
+                .load(film.posterPath)
+                .placeholder(R.drawable.ic_baseline_image_24)
+                .error(R.drawable.ic_baseline_error_24)
+                .into(imageViewPoster)
             imageViewPoster.background =
                 ResourcesCompat.getColor(
                     itemView.resources,
-                    if (film.selected) R.color.purple_200 else R.color.white, null
+                    R.color.white, null
                 )
                     .toDrawable()
             textViewName.text = film.name
             textViewName.background =
                 ResourcesCompat.getColor(
                     itemView.resources,
-                    if (film.selected) R.color.purple_200 else R.color.white, null
+                    R.color.white, null
                 )
                     .toDrawable()
             imageViewStar.setImageResource(
-                if (film.isFavorite) R.drawable.star_gold else R.drawable.star_silver
+                if (film.isFavorite == 1) R.drawable.star_gold else R.drawable.star_silver
             )
         }
     }
