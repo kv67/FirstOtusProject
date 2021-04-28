@@ -40,4 +40,8 @@
     <string name="works_only_with_films_msg">Works only with films list</string>
     <string name="load_data_error_msg">"Error during load data: "</string>
     <string name="repeat_caption">Repeat</string>
+    <string name="notify_caption">Notify</string>
+    <string name="notification_date_hint">Date of notification</string>
+    <string name="button_text_ok">OK</string>
+    <string name="image_for_alert_dialog" translatable="false">Image for alert dialog</string>
 </resources>

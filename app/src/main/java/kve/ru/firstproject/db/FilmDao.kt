@@ -28,4 +28,19 @@ interface FilmDao {
     @Query("UPDATE film SET is_favorite = 1 WHERE id = :id")
     fun addToFavorite(id: Int)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertNotification(notification: Notification)
+
+    @Update
+    fun updateNotification(notification: Notification)
+
+    @Query("SELECT * FROM notification ORDER BY notification_dt")
+    fun getAllNotifications(): List<Notification>?
+
+    @Query("SELECT * FROM notification WHERE id = :id")
+    fun getNotificationById(id: Int): Notification?
+
+    @Query("DELETE FROM notification WHERE id = :id")
+    fun deleteNotificationById(id: Int)
+
 }

@@ -2,13 +2,14 @@ package kve.ru.firstproject
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.DialogInterface
-import android.content.DialogInterface.BUTTON_NEGATIVE
-import android.content.DialogInterface.BUTTON_POSITIVE
-import android.content.Intent
+import android.content.*
+import android.content.DialogInterface.*
 import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -17,7 +18,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.ktx.Firebase
@@ -28,13 +31,17 @@ import kve.ru.firstproject.fragments.FilmListFragment
 import kve.ru.firstproject.model.FilmViewModel
 import kve.ru.firstproject.utils.FeatureToggles
 
+
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
+        const val TAG = "Main_activity"
+        const val MESSAGE_EVENT = "kve.ru.firstproject.MESSAGE_EVENT"
+
         fun doExit(activity: Activity) {
             val bld: AlertDialog.Builder = AlertDialog.Builder(activity)
             val lst =
-                DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                OnClickListener { dialog: DialogInterface, which ->
                     when (which) {
                         BUTTON_NEGATIVE -> dialog.dismiss()
                         BUTTON_POSITIVE -> activity.finish()
@@ -44,6 +51,30 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             bld.setTitle(activity.getString(R.string.exit_title))
             bld.setNegativeButton(activity.getString(R.string.negative_button), lst)
             bld.setPositiveButton(activity.getString(R.string.positive_button), lst)
+            val dialog: AlertDialog = bld.create()
+            dialog.show()
+        }
+
+        fun showExtraFilmData(activity: Activity, title: String, dsc: String, poster: String?) {
+            val bld: AlertDialog.Builder = AlertDialog.Builder(activity)
+            bld.setNeutralButton(activity.getString(R.string.button_text_ok)) { dialog: DialogInterface, which ->
+                when (which) {
+                    BUTTON_NEUTRAL -> dialog.dismiss()
+                }
+            }
+            bld.setMessage(dsc)
+            bld.setTitle(title)
+            poster?.let {
+                val view: View =
+                    LayoutInflater.from(activity).inflate(R.layout.alert_dialog_view, null)
+                val image = view.findViewById<ImageView>(R.id.dialog_image_view)
+                Glide.with(image.context)
+                    .load(it)
+                    .placeholder(R.drawable.ic_baseline_image_24)
+                    .error(R.drawable.ic_baseline_error_24)
+                    .into(image)
+                bld.setView(view)
+            }
             val dialog: AlertDialog = bld.create()
             dialog.show()
         }
@@ -71,7 +102,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private val remoteConfig = Firebase.remoteConfig
     private val drawer by lazy {
         findViewById<DrawerLayout>(R.id.drawer_layout)
     }
@@ -94,18 +124,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         setSupportActionBar(toolbar)
         initDrawer()
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(onEvent, IntentFilter(MESSAGE_EVENT))
 
         viewModel.isSelected.observe(this, { selected ->
+            Log.d(TAG, "selected - $selected")
             selected?.let {
                 if (it) {
-                    supportFragmentManager.beginTransaction()
-                        .replace(
-                            R.id.fragmentContainer,
-                            FilmDetailFragment(),
-                            FilmDetailFragment.TAG
-                        )
-                        .addToBackStack(null)
-                        .commit()
+                    showFilmDetail()
                 }
             }
         })
@@ -134,15 +160,75 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             viewModel.loadData()
             showFilmList()
         }
+
+        intent?.let {
+            it.getIntExtra(FilmDetailFragment.EXTRA_FILM_ID, 0).let { id ->
+                if (id > 0) {
+                    Log.d(TAG, "getFilmById: id = $id")
+                    viewModel.getFilmById(id)
+                    showFilmDetail()
+                }
+            }
+
+            it.getStringExtra("film_title")?.let { title ->
+                Log.d(TAG, "Firebase film title: $title")
+                var dsc = ""
+                it.getStringExtra("film_dsc")?.let { film_dsc ->
+                    dsc = film_dsc
+                }
+
+                showExtraFilmData(
+                    this, title, dsc, it.getStringExtra("film_poster")
+                )
+            }
+        }
+    }
+
+    private val onEvent: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let {
+
+                var title = ""
+                it.getStringExtra("film_title")?.let { film_title ->
+                    title = film_title
+                    Log.d(TAG, "Received msg -> film title: $title")
+                }
+                var dsc = ""
+                it.getStringExtra("film_dsc")?.let { film_dsc ->
+                    dsc = film_dsc
+                }
+
+                showExtraFilmData(
+                    this@MainActivity,
+                    title,
+                    dsc,
+                    it.getStringExtra("film_poster")
+                )
+            }
+
+        }
     }
 
     private fun showFilmList() {
+        Log.d(TAG, "showFilmList")
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.fragmentContainer,
                 FilmListFragment(),
                 FilmListFragment.TAG
             )
+            .commit()
+    }
+
+    private fun showFilmDetail() {
+        Log.d(TAG, "showFilmDetail")
+        supportFragmentManager.beginTransaction()
+            .replace(
+                R.id.fragmentContainer,
+                FilmDetailFragment(),
+                FilmDetailFragment.TAG
+            )
+            .addToBackStack(null)
             .commit()
     }
 
@@ -157,7 +243,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             .setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark))
         navigationView.menu.findItem(R.id.nav_home).isChecked = true
         navigationView.menu.findItem(R.id.nav_delete_cache).isVisible =
-            remoteConfig.getBoolean(FeatureToggles.CACHE_CLEAR_ENABLED)
+            Firebase.remoteConfig.getBoolean(FeatureToggles.CACHE_CLEAR_ENABLED)
     }
 
     override fun onBackPressed() {
@@ -171,7 +257,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             val bld: AlertDialog.Builder = AlertDialog.Builder(this)
             val lst =
-                DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                OnClickListener { dialog: DialogInterface, which ->
                     when (which) {
                         BUTTON_NEGATIVE -> dialog.dismiss()
                         BUTTON_POSITIVE -> super.onBackPressed()
@@ -226,7 +312,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.nav_delete_cache -> {
                 val bld: AlertDialog.Builder = AlertDialog.Builder(this)
                 val lst =
-                    DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                    OnClickListener { dialog: DialogInterface, which ->
                         when (which) {
                             BUTTON_NEGATIVE -> dialog.dismiss()
                             BUTTON_POSITIVE -> {

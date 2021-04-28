@@ -54,24 +54,29 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:theme="@android:style/Widget.Material.Light.DatePicker">
 
                 <TextView
                     android:id="@+id/textViewDsc"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
                     android:text="@string/blood_sport_dsc"
                     android:textAlignment="viewStart"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <CheckBox
                     android:id="@+id/checkBoxLike"
-                    android:layout_width="110dp"
+                    android:layout_width="120dp"
                     android:layout_height="45dp"
                     android:layout_marginStart="8dp"
                     android:text="@string/like"
+                    android:textSize="14sp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textViewDsc" />
 
@@ -81,6 +86,7 @@
                     android:layout_height="wrap_content"
                     android:autofillHints=""
                     android:ems="10"
+                    android:fadingEdge="vertical"
                     android:hint="@string/comment"
                     android:inputType="textShortMessage"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -92,5 +98,18 @@
         </androidx.cardview.widget.CardView>
 
     </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fbuNotify"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="8dp"
+        android:backgroundTint="@color/colorPrimary"
+        android:clickable="true"
+        android:focusable="true"
+        app:srcCompat="@drawable/ic_notify_date_24"
+        android:contentDescription="@string/notify_caption"
+        />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

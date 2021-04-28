@@ -1,8 +1,10 @@
 package kve.ru.firstproject.model
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.db.Film
 import kve.ru.firstproject.repositories.ApiRepository
 import kve.ru.firstproject.repositories.FilmRepository
@@ -22,7 +24,7 @@ class FilmViewModel : ViewModel() {
         updateFilm(null)
         loadingLiveData.postValue(false)
         favoriteUpdatedLiveData.postValue(0)
-        isSelectedLiveData.postValue(false)
+       // isSelectedLiveData.postValue(false)
     }
 
     companion object {
@@ -65,7 +67,7 @@ class FilmViewModel : ViewModel() {
         apiRepository.loadData(page,
             { films ->
                 films?.let {
-                    filmRepository.saveFilmsToDb(films) { films ->
+                    filmRepository.saveFilmsToDb(it) { films ->
                         filmsLiveData.postValue(films)
                     }
                     page++
@@ -94,6 +96,7 @@ class FilmViewModel : ViewModel() {
 
     fun getFilmById(id: Int) {
         isSelectedLiveData.postValue(true)
+        Log.d(MainActivity.TAG, "Model getFilmById: id = $id, isSelected = ${isSelected.value}")
         filmRepository.getFilmById(id) {
             selectedFilmData.postValue(it)
             isSelectedLiveData.postValue(false)
