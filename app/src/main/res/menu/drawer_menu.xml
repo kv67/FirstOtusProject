@@ -13,6 +13,10 @@
             android:icon="@drawable/ic_baseline_grade_24"
             android:title="@string/favorites" />
         <item
+            android:id="@+id/nav_notifications"
+            android:icon="@drawable/ic_notify_date_black_24"
+            android:title="@string/notifications_title" />
+        <item
             android:id="@+id/nav_exit"
             android:icon="@drawable/ic_baseline_exit_to_app_24"
             android:title="@string/menu_item_exit" />

@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.db.Film
+import kve.ru.firstproject.db.Notification
 import kve.ru.firstproject.repositories.ApiRepository
 import kve.ru.firstproject.repositories.FilmRepository
 
@@ -13,6 +14,7 @@ class FilmViewModel : ViewModel() {
 
     private val filmsLiveData = MutableLiveData<List<Film>>()
     private val favoritesLiveData = MutableLiveData<List<Film>>()
+    private val notificationsLiveData = MutableLiveData<List<Notification>>()
     private val selectedFilmData = MutableLiveData<Film>()
     private val isSelectedLiveData = MutableLiveData<Boolean>()
     private val errorLiveData = MutableLiveData<String>()
@@ -24,7 +26,6 @@ class FilmViewModel : ViewModel() {
         updateFilm(null)
         loadingLiveData.postValue(false)
         favoriteUpdatedLiveData.postValue(0)
-       // isSelectedLiveData.postValue(false)
     }
 
     companion object {
@@ -40,6 +41,9 @@ class FilmViewModel : ViewModel() {
 
     val favorites: LiveData<List<Film>>
         get() = favoritesLiveData
+
+    val notifications: LiveData<List<Notification>>
+        get() = notificationsLiveData
 
     val selectedFilm: LiveData<Film>
         get() = selectedFilmData
@@ -79,6 +83,24 @@ class FilmViewModel : ViewModel() {
                 loadingLiveData.postValue(false)
             }
         )
+    }
+
+    fun getNotifications() {
+        filmRepository.getNotifications {
+            notificationsLiveData.postValue(it)
+        }
+    }
+
+    fun addNotification(notification: Notification) {
+        filmRepository.addNotification(notification) {
+            notificationsLiveData.postValue(it)
+        }
+    }
+
+    fun deleteNotification(id: Int) {
+        filmRepository.deleteNotification(id) {
+            notificationsLiveData.postValue(it)
+        }
     }
 
     fun addToFavorite(id: Int) {

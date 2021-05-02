@@ -17,5 +17,3 @@ data class Film(
     @ColumnInfo(name = "is_favorite") var isFavorite: Int = 0,
     var comment: String = ""
 )
-
-// : Parcelable

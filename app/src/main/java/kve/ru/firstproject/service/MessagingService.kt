@@ -19,26 +19,21 @@ class MessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(msg: RemoteMessage) {
-        Log.d(TAG, "From: ${msg.from}")
-
         // Check if message contains a data payload.
         if (msg.data.isNotEmpty()) {
             Log.d(MainActivity.TAG, "Message data payload: ${msg.data}")
-            Log.d(MainActivity.TAG, "filmName = ${msg.data["film_title"]}")
-            Log.d(MainActivity.TAG, "filmId = ${msg.data["film_dsc"]}")
             val intent = Intent(MainActivity.MESSAGE_EVENT)
-            msg.data["film_title"]?.let {
-                intent.putExtra("film_title", it)
+            msg.data[FilmNotificationPublisher.FILM_TITLE]?.let {
+                intent.putExtra(FilmNotificationPublisher.FILM_TITLE, it)
             }
-            msg.data["film_dsc"]?.let {
-                intent.putExtra("film_dsc", it)
+            msg.data[FilmNotificationPublisher.FILM_DSC]?.let {
+                intent.putExtra(FilmNotificationPublisher.FILM_DSC, it)
             }
-            msg.data["film_poster"]?.let {
-                intent.putExtra("film_poster", it)
+            msg.data[FilmNotificationPublisher.FILM_POSTER]?.let {
+                intent.putExtra(FilmNotificationPublisher.FILM_POSTER, it)
             }
 
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-            // MainActivity.showExtraFilmData(App.instance.applicationContext, )
         }
 
         // Check if message contains a notification payload.

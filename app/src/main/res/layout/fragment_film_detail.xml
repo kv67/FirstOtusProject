@@ -87,6 +87,7 @@
                     android:autofillHints=""
                     android:ems="10"
                     android:fadingEdge="vertical"
+                    android:textCursorDrawable="@color/colorPrimary"
                     android:hint="@string/comment"
                     android:inputType="textShortMessage"
                     app:layout_constraintEnd_toEndOf="parent"

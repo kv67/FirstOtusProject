@@ -3,6 +3,7 @@ package kve.ru.firstproject.repositories
 import kve.ru.firstproject.App
 import kve.ru.firstproject.db.Db
 import kve.ru.firstproject.db.Film
+import kve.ru.firstproject.db.Notification
 import kve.ru.firstproject.pojo.BestMovie
 import kve.ru.firstproject.utils.NetworkUtils
 import java.util.concurrent.Executors
@@ -124,5 +125,66 @@ class FilmRepository {
             }
         }
         Executors.newSingleThreadScheduledExecutor().schedule(task, 20, TimeUnit.MILLISECONDS)
+    }
+
+    fun getNotifications(
+        notificationListener: ((notifications: List<Notification>) -> Unit)
+    ) {
+        val task = Runnable {
+            Db.getInstance(App.instance)?.getFilmDao()?.getAllNotifications()?.let {
+                notificationListener.invoke(it)
+            }
+        }
+        Executors.newSingleThreadScheduledExecutor()
+            .schedule(task, 20, TimeUnit.MILLISECONDS)
+    }
+
+    fun addNotification(
+        notification: Notification,
+        notificationListener: ((notifications: List<Notification>) -> Unit)
+    ) {
+        val task = Runnable {
+            Db.getInstance(App.instance)?.getFilmDao()?.getNotificationById(notification.id)?.let {
+                Db.getInstance(App.instance)?.getFilmDao()?.updateNotification(notification)
+            } ?: run {
+                Db.getInstance(App.instance)?.getFilmDao()?.insertNotification(notification)
+            }
+
+            Db.getInstance(App.instance)?.getFilmDao()?.getAllNotifications()?.let {
+                notificationListener.invoke(it)
+            }
+        }
+        Executors.newSingleThreadScheduledExecutor()
+            .schedule(task, 20, TimeUnit.MILLISECONDS)
+    }
+
+    fun deleteNotification(
+        id: Int,
+        notificationListener: ((notifications: List<Notification>) -> Unit)
+    ) {
+        val task = Runnable {
+            Db.getInstance(App.instance)?.getFilmDao()?.deleteNotificationById(id)
+            Db.getInstance(App.instance)?.getFilmDao()?.getAllNotifications()?.let {
+                notificationListener.invoke(it)
+            }
+        }
+        Executors.newSingleThreadScheduledExecutor()
+            .schedule(task, 20, TimeUnit.MILLISECONDS)
+    }
+
+    fun processNotification(id: Int, date: String, notificationListener: (() -> Unit)) {
+        val task = Runnable {
+            val curNotification =
+                Db.getInstance(App.instance)?.getFilmDao()?.getNotificationById(id)
+            curNotification?.let {
+                if (date == curNotification.date) {
+                    Db.getInstance(App.instance)?.getFilmDao()
+                        ?.deleteNotificationById(id)
+                    notificationListener.invoke()
+                }
+            }
+        }
+        Executors.newSingleThreadScheduledExecutor()
+            .schedule(task, 20, TimeUnit.MILLISECONDS)
     }
 }

@@ -11,6 +11,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -28,7 +29,9 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import kve.ru.firstproject.fragments.FavoriteListFragment
 import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.fragments.FilmListFragment
+import kve.ru.firstproject.fragments.NotificationListFragment
 import kve.ru.firstproject.model.FilmViewModel
+import kve.ru.firstproject.service.FilmNotificationPublisher
 import kve.ru.firstproject.utils.FeatureToggles
 
 
@@ -51,30 +54,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             bld.setTitle(activity.getString(R.string.exit_title))
             bld.setNegativeButton(activity.getString(R.string.negative_button), lst)
             bld.setPositiveButton(activity.getString(R.string.positive_button), lst)
-            val dialog: AlertDialog = bld.create()
-            dialog.show()
-        }
-
-        fun showExtraFilmData(activity: Activity, title: String, dsc: String, poster: String?) {
-            val bld: AlertDialog.Builder = AlertDialog.Builder(activity)
-            bld.setNeutralButton(activity.getString(R.string.button_text_ok)) { dialog: DialogInterface, which ->
-                when (which) {
-                    BUTTON_NEUTRAL -> dialog.dismiss()
-                }
-            }
-            bld.setMessage(dsc)
-            bld.setTitle(title)
-            poster?.let {
-                val view: View =
-                    LayoutInflater.from(activity).inflate(R.layout.alert_dialog_view, null)
-                val image = view.findViewById<ImageView>(R.id.dialog_image_view)
-                Glide.with(image.context)
-                    .load(it)
-                    .placeholder(R.drawable.ic_baseline_image_24)
-                    .error(R.drawable.ic_baseline_error_24)
-                    .into(image)
-                bld.setView(view)
-            }
             val dialog: AlertDialog = bld.create()
             dialog.show()
         }
@@ -118,6 +97,33 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         ViewModelProvider(this)[FilmViewModel::class.java]
     }
 
+    private val onEvent: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let {
+
+                var title = ""
+                it.getStringExtra(FilmNotificationPublisher.FILM_TITLE)?.let { filmTitle ->
+                    title = filmTitle
+                    Log.d(TAG, "Received msg -> film title: $title")
+                    it.removeExtra(FilmNotificationPublisher.FILM_TITLE)
+                }
+                var dsc = ""
+                it.getStringExtra(FilmNotificationPublisher.FILM_DSC)?.let { filmDsc ->
+                    dsc = filmDsc
+                    it.removeExtra(FilmNotificationPublisher.FILM_DSC)
+                }
+
+                if (title.isNotEmpty()) {
+                    showExtraFilmData(
+                        title,
+                        dsc,
+                        it.getStringExtra(FilmNotificationPublisher.FILM_POSTER)
+                    )
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -128,7 +134,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             .registerReceiver(onEvent, IntentFilter(MESSAGE_EVENT))
 
         viewModel.isSelected.observe(this, { selected ->
-            Log.d(TAG, "selected - $selected")
             selected?.let {
                 if (it) {
                     showFilmDetail()
@@ -164,53 +169,56 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         intent?.let {
             it.getIntExtra(FilmDetailFragment.EXTRA_FILM_ID, 0).let { id ->
                 if (id > 0) {
-                    Log.d(TAG, "getFilmById: id = $id")
                     viewModel.getFilmById(id)
                     showFilmDetail()
                 }
+                it.removeExtra(FilmDetailFragment.EXTRA_FILM_ID)
             }
 
-            it.getStringExtra("film_title")?.let { title ->
+            it.getStringExtra(FilmNotificationPublisher.FILM_TITLE)?.let { title ->
                 Log.d(TAG, "Firebase film title: $title")
                 var dsc = ""
-                it.getStringExtra("film_dsc")?.let { film_dsc ->
-                    dsc = film_dsc
+                it.getStringExtra(FilmNotificationPublisher.FILM_DSC)?.let { filmDsc ->
+                    dsc = filmDsc
                 }
 
                 showExtraFilmData(
-                    this, title, dsc, it.getStringExtra("film_poster")
+                    title, dsc, it.getStringExtra(FilmNotificationPublisher.FILM_POSTER)
                 )
+
+                it.removeExtra(FilmNotificationPublisher.FILM_TITLE)
             }
         }
     }
 
-    private val onEvent: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            intent?.let {
-
-                var title = ""
-                it.getStringExtra("film_title")?.let { film_title ->
-                    title = film_title
-                    Log.d(TAG, "Received msg -> film title: $title")
-                }
-                var dsc = ""
-                it.getStringExtra("film_dsc")?.let { film_dsc ->
-                    dsc = film_dsc
-                }
-
-                showExtraFilmData(
-                    this@MainActivity,
-                    title,
-                    dsc,
-                    it.getStringExtra("film_poster")
-                )
+    private fun showExtraFilmData(title: String, dsc: String, poster: String?) {
+        val bld: AlertDialog.Builder = AlertDialog.Builder(this)
+        bld.setNeutralButton(getString(R.string.button_text_ok)) { dialog: DialogInterface, which ->
+            when (which) {
+                BUTTON_NEUTRAL -> dialog.dismiss()
             }
-
         }
+        bld.setTitle(title)
+        poster?.let {
+            val view: View =
+                LayoutInflater.from(this).inflate(R.layout.alert_dialog_view, null)
+            val filmDsc = view.findViewById<TextView>(R.id.textViewMsgDsc)
+            filmDsc.text = dsc
+            val image = view.findViewById<ImageView>(R.id.dialog_image_view)
+            Glide.with(applicationContext)
+                .load(it)
+                .placeholder(R.drawable.ic_baseline_image_24)
+                .error(R.drawable.ic_baseline_error_24)
+                .into(image)
+            bld.setView(view)
+        } ?: run {
+            bld.setMessage(dsc)
+        }
+        val dialog: AlertDialog = bld.create()
+        dialog.show()
     }
 
     private fun showFilmList() {
-        Log.d(TAG, "showFilmList")
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.fragmentContainer,
@@ -221,7 +229,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun showFilmDetail() {
-        Log.d(TAG, "showFilmDetail")
         supportFragmentManager.beginTransaction()
             .replace(
                 R.id.fragmentContainer,
@@ -281,11 +288,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 ) {
                     onBackPressed()
                 }
-                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
+                if ( navigationView.menu.findItem(R.id.nav_delete_cache).isVisible) {
+                    navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
+                }
             }
             R.id.nav_favorites -> {
                 if (fragment.tag != FavoriteListFragment.TAG) {
-                    if (fragment.tag == FilmDetailFragment.TAG) {
+                    if (fragment.tag != FilmListFragment.TAG &&
+                        supportFragmentManager.backStackEntryCount > 0
+                    ) {
                         onBackPressed()
                     }
                     supportFragmentManager.beginTransaction()
@@ -293,6 +304,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             R.id.fragmentContainer,
                             FavoriteListFragment(),
                             FavoriteListFragment.TAG
+                        )
+                        .addToBackStack(null)
+                        .commit()
+                }
+                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = false
+            }
+            R.id.nav_notifications -> {
+                if (fragment.tag != NotificationListFragment.TAG) {
+                    if (fragment.tag != FilmListFragment.TAG &&
+                        supportFragmentManager.backStackEntryCount > 0
+                    ) {
+                        onBackPressed()
+                    }
+                    supportFragmentManager.beginTransaction()
+                        .replace(
+                            R.id.fragmentContainer,
+                            NotificationListFragment(),
+                            NotificationListFragment.TAG
                         )
                         .addToBackStack(null)
                         .commit()

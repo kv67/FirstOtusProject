@@ -44,4 +44,6 @@
     <string name="notification_date_hint">Date of notification</string>
     <string name="button_text_ok">OK</string>
     <string name="image_for_alert_dialog" translatable="false">Image for alert dialog</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="notification_removed_msg">Notification has deleted</string>
 </resources>

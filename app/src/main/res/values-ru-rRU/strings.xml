@@ -41,4 +41,6 @@
     <string name="notify_caption">Напомнить</string>
     <string name="notification_date_hint">Дата напоминания</string>
     <string name="button_text_ok">ОК</string>
+    <string name="notifications_title">Напоминания</string>
+    <string name="notification_removed_msg">Напоминание удалено</string>
 </resources>
