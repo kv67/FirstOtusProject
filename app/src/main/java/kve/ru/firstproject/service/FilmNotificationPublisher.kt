@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
-import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import kve.ru.firstproject.R
 import kve.ru.firstproject.fragments.FilmDetailFragment
@@ -66,10 +65,19 @@ class FilmNotificationPublisher : BroadcastReceiver() {
                 notificationIntent,
                 PendingIntent.FLAG_CANCEL_CURRENT
             )
-            val offset =
-                SystemClock.elapsedRealtime() + (time - Calendar.getInstance().timeInMillis)
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            alarmManager[AlarmManager.ELAPSED_REALTIME_WAKEUP, offset] = pendingIntent
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                alarmManager.setAlarmClock(
+                    AlarmManager.AlarmClockInfo(time, pendingIntent),
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    time,
+                    pendingIntent
+                )
+            }
         }
     }
 

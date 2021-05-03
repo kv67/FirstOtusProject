@@ -1,10 +1,8 @@
 package kve.ru.firstproject.model
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.db.Film
 import kve.ru.firstproject.db.Notification
 import kve.ru.firstproject.repositories.ApiRepository
@@ -118,7 +116,6 @@ class FilmViewModel : ViewModel() {
 
     fun getFilmById(id: Int) {
         isSelectedLiveData.postValue(true)
-        Log.d(MainActivity.TAG, "Model getFilmById: id = $id, isSelected = ${isSelected.value}")
         filmRepository.getFilmById(id) {
             selectedFilmData.postValue(it)
             isSelectedLiveData.postValue(false)
@@ -129,7 +126,8 @@ class FilmViewModel : ViewModel() {
         page = 0
         filmRepository.clearFilms(
             { films -> filmsLiveData.postValue(films) },
-            { favorites -> favoritesLiveData.postValue(favorites) }
+            { favorites -> favoritesLiveData.postValue(favorites) },
+            { notes -> notificationsLiveData.postValue(notes) }
         )
     }
 }

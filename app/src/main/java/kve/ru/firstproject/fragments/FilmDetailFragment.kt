@@ -104,10 +104,6 @@ class FilmDetailFragment : Fragment() {
                         .error(R.drawable.ic_baseline_error_24)
                         .into(img)
                 }
-
-                it.posterPath?.let { path ->
-                    Log.d(MainActivity.TAG, path)
-                }
             }
         })
     }

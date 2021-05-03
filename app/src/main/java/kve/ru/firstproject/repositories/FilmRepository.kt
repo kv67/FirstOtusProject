@@ -113,15 +113,20 @@ class FilmRepository {
 
     fun clearFilms(
         filmListener: ((films: List<Film>) -> Unit),
-        favoriteListener: ((favorites: List<Film>) -> Unit)
+        favoriteListener: ((favorites: List<Film>) -> Unit),
+        notificationListener: ((notes: List<Notification>) -> Unit)
     ) {
         val task = Runnable {
             Db.getInstance(App.instance)?.getFilmDao()?.deleteAll()
+            Db.getInstance(App.instance)?.getFilmDao()?.deleteAllNotifications()
             Db.getInstance(App.instance)?.getFilmDao()?.getAll()?.let {
                 filmListener.invoke(it)
             }
             Db.getInstance(App.instance)?.getFilmDao()?.getFavorites()?.let {
                 favoriteListener.invoke(it)
+            }
+            Db.getInstance(App.instance)?.getFilmDao()?.getAllNotifications()?.let {
+                notificationListener.invoke(it)
             }
         }
         Executors.newSingleThreadScheduledExecutor().schedule(task, 20, TimeUnit.MILLISECONDS)

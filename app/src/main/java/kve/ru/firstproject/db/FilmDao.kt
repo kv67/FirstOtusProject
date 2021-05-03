@@ -42,4 +42,7 @@ interface FilmDao {
 
     @Query("DELETE FROM notification WHERE id = :id")
     fun deleteNotificationById(id: Int)
+
+    @Query("DELETE FROM notification")
+    fun deleteAllNotifications()
 }
