@@ -23,6 +23,11 @@ class MessagingService : FirebaseMessagingService() {
         if (msg.data.isNotEmpty()) {
             Log.d(MainActivity.TAG, "Message data payload: ${msg.data}")
             val intent = Intent(MainActivity.MESSAGE_EVENT)
+
+            msg.data[FilmNotificationPublisher.FILM_ID]?.let {
+                 intent.putExtra(FilmNotificationPublisher.FILM_ID, it)
+            }
+
             msg.data[FilmNotificationPublisher.FILM_TITLE]?.let {
                 intent.putExtra(FilmNotificationPublisher.FILM_TITLE, it)
             }

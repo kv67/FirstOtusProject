@@ -177,16 +177,14 @@ class FilmRepository {
             .schedule(task, 20, TimeUnit.MILLISECONDS)
     }
 
-    fun processNotification(id: Int, date: String, notificationListener: (() -> Unit)) {
+    fun processNotification(id: Int, notificationListener: (() -> Unit)) {
         val task = Runnable {
             val curNotification =
                 Db.getInstance(App.instance)?.getFilmDao()?.getNotificationById(id)
             curNotification?.let {
-                if (date == curNotification.date) {
-                    Db.getInstance(App.instance)?.getFilmDao()
-                        ?.deleteNotificationById(id)
-                    notificationListener.invoke()
-                }
+                Db.getInstance(App.instance)?.getFilmDao()
+                    ?.deleteNotificationById(id)
+                notificationListener.invoke()
             }
         }
         Executors.newSingleThreadScheduledExecutor()

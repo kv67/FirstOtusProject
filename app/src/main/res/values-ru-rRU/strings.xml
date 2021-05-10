@@ -43,4 +43,5 @@
     <string name="button_text_ok">ОК</string>
     <string name="notifications_title">Напоминания</string>
     <string name="notification_removed_msg">Напоминание удалено</string>
+    <string name="current_time_passed_msg">Указанное время уже прошло</string>
 </resources>

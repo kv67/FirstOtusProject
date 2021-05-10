@@ -1,3 +1,29 @@
 
 9
 	README.md,8\e\8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
+\
+,app/src/main/java/kve/ru/firstproject/App.kt,4\b\4b65a107e17abde0f824e4508237a7d8570bf46e
+P
+ app/src/main/AndroidManifest.xml,8\c\8c55c3ccc257e5907959013f99656e4c8ec3903e
+p
+@app/src/main/java/kve/ru/firstproject/adapter/FavoriteAdapter.kt,f\8\f83026c6d670d1736f76728ea6858a154c7f7eab
+_
+/app/schemas/kve.ru.firstproject.db.AppDb/4.json,a\4\a4c8a541e2c4ae2079e28fea2cadddd300ba9f18
+l
+<app/src/main/java/kve/ru/firstproject/adapter/FilmAdapter.kt,2\4\243f7ed3205e5da28b80c47d098bc1fffa69030a
+t
+Dapp/src/main/java/kve/ru/firstproject/adapter/NotificationAdapter.kt,1\b\1bce037d2e649aa2fce107b121b402a167fc06c8
+a
+1app/src/main/java/kve/ru/firstproject/db/AppDb.kt,e\2\e24c46c2d074896f2d5f6c3f3bf1c243798a611d
+^
+.app/src/main/java/kve/ru/firstproject/db/Db.kt,4\d\4d37a84ab6cd6fc346fe26f8be381558704df6ed
+`
+0app/src/main/java/kve/ru/firstproject/db/Film.kt,5\0\50c45cc0254a35c87fb94082f86d28c21772a5a5
+f
+6app/src/main/java/kve/ru/firstproject/db/Migrations.kt,a\a\aaf0b4cb4e14240bf59bd10cee81971d5712dc4e
+w
+Gapp/src/main/java/kve/ru/firstproject/fragments/FavoriteListFragment.kt,5\a\5ac93ebf3c4b70b1cea0aa8986df1f2e21602a06
+s
+Capp/src/main/java/kve/ru/firstproject/fragments/FilmListFragment.kt,0\d\0d66a2afd887f7f3c635099852508db7c905e5f1
+c
+3app/src/main/java/kve/ru/firstproject/db/FilmDao.kt,6\8\681be5d0e65ffccce246445cf061afe9f3387b05

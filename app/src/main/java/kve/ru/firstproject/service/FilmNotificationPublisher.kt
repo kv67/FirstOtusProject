@@ -10,8 +10,6 @@ import androidx.core.app.NotificationCompat
 import kve.ru.firstproject.R
 import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.repositories.FilmRepository
-import java.text.SimpleDateFormat
-import java.util.*
 
 
 class FilmNotificationPublisher : BroadcastReceiver() {
@@ -19,11 +17,26 @@ class FilmNotificationPublisher : BroadcastReceiver() {
     companion object {
         const val NOTIFICATION_ID = "NOTIFICATION_ID"
         const val NOTIFICATION = "NOTIFICATION"
-        const val NOTIFICATION_CHANNEL_ID = "Channel_id_001"
+        const val FILM_ID = "film_id"
         const val FILM_TITLE = "film_title"
         const val FILM_DSC = "film_dsc"
         const val FILM_POSTER = "film_poster"
         private const val NOTIFICATION_CHANNEL_NAME = "Channel_name_001"
+        private const val NOTIFICATION_CHANNEL_ID = "Channel_id_001"
+
+        fun cancelNotification(
+            context: Context,
+            filmId: Int
+        ) {
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                filmId,
+                Intent(context, FilmNotificationPublisher::class.java),
+                PendingIntent.FLAG_CANCEL_CURRENT
+            )
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.cancel(pendingIntent)
+        }
 
         fun sendNotification(
             context: Context,
@@ -93,18 +106,16 @@ class FilmNotificationPublisher : BroadcastReceiver() {
                     val notificationManager =
                         context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        val importance = NotificationManager.IMPORTANCE_DEFAULT
                         val notificationChannel = NotificationChannel(
                             NOTIFICATION_CHANNEL_ID,
-                            NOTIFICATION_CHANNEL_NAME, importance
+                            NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT
                         )
                         notificationChannel.enableVibration(true)
                         notificationChannel.vibrationPattern =
                             longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
                         notificationManager.createNotificationChannel(notificationChannel)
                     }
-                    val date = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
-                    repository.processNotification(filmId, date) {
+                    repository.processNotification(filmId) {
                         notificationManager.notify(filmId, notification)
                     }
                 }

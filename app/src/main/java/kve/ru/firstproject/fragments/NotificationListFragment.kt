@@ -1,6 +1,7 @@
 package kve.ru.firstproject.fragments
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -8,6 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.DatePicker
+import android.widget.TimePicker
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -55,14 +58,14 @@ class NotificationListFragment : Fragment() {
             (recyclerViewNotifications?.adapter as NotificationAdapter).getItemByPos(it)
                 ?.let { note ->
                     viewModel.deleteNotification(note.id)
+                    FilmNotificationPublisher.cancelNotification(requireContext(), note.id)
                     MainActivity.showSnackBar(
                         requireView(),
                         getString(R.string.notification_removed_msg),
                         getString(R.string.undo_btn_title)
                     ) {
-                        viewModel.addNotification(note)
+                        setNotification(note)
                     }
-
                 }
         }
 
@@ -103,24 +106,46 @@ class NotificationListFragment : Fragment() {
             requireContext(),
             android.R.style.Theme_Material_Light_Dialog,
             { _: DatePicker, y: Int, m: Int, d: Int ->
-                notification.let { note ->
-                    val date =
-                        "${if (d < 10) "0" else ""}$d.${if (m + 1 < 10) "0" else ""}${m + 1}.$y"
-                    viewModel.addNotification(Notification(note.id, note.name, date, note.dsc))
-                    Calendar.getInstance().let { cl ->
-                        cl.set(y, m, d, 10, 0, 0)
-                        FilmNotificationPublisher.sendNotification(
-                            requireContext(), note.id, note.name, note.dsc, cl.timeInMillis
-                        )
-                    }
-                }
+                setTime(notification, y, m, d)
             },
             year, month, day
         )
-        cal.add(Calendar.DATE, 1)
         dialog.datePicker.minDate = cal.timeInMillis
         cal.add(Calendar.DATE, 15)
         dialog.datePicker.maxDate = cal.timeInMillis
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.WHITE))
+        dialog.show()
+    }
+
+    private fun setTime(notification: Notification, y: Int, m: Int, d: Int) {
+        val cal = Calendar.getInstance()
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        val minute = cal.get(Calendar.MINUTE)
+        val dialog = TimePickerDialog(
+            requireContext(),
+            android.R.style.Theme_Material_Light_Dialog,
+            { _: TimePicker, h: Int, mnt: Int ->
+                notification.let { note ->
+                    val dateTime =
+                        "${if (d < 10) "0" else ""}$d.${if (m + 1 < 10) "0" else ""}${m + 1}.$y ${if (h < 10) "0" else ""}$h:${if (mnt < 10) "0" else ""}$mnt"
+                    Calendar.getInstance().let { cl ->
+                        cl.set(y, m, d, h, mnt)
+                        if (Calendar.getInstance().timeInMillis < cl.timeInMillis) {
+                            viewModel.addNotification(Notification(note.id, note.name, dateTime, note.dsc))
+                            FilmNotificationPublisher.sendNotification(
+                                requireContext(), note.id, note.name, note.dsc, cl.timeInMillis
+                            )
+                        } else {
+                            Toast.makeText(
+                                requireContext(),
+                                getString(R.string.current_time_passed_msg),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }, hour, minute + 1, true
+        )
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.WHITE))
         dialog.show()
     }

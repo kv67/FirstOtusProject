@@ -46,4 +46,5 @@
     <string name="image_for_alert_dialog" translatable="false">Image for alert dialog</string>
     <string name="notifications_title">Notifications</string>
     <string name="notification_removed_msg">Notification has deleted</string>
+    <string name="current_time_passed_msg">The specified time has already passed</string>
 </resources>
