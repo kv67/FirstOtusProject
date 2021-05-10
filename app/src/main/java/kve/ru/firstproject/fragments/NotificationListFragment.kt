@@ -132,8 +132,8 @@ class NotificationListFragment : Fragment() {
                         cl.set(y, m, d, h, mnt)
                         if (Calendar.getInstance().timeInMillis < cl.timeInMillis) {
                             viewModel.addNotification(Notification(note.id, note.name, dateTime, note.dsc))
-                            FilmNotificationPublisher.sendNotification(
-                                requireContext(), note.id, note.name, note.dsc, cl.timeInMillis
+                            FilmNotificationPublisher.sendFilmNotification(
+                                requireContext(), note.id, cl.timeInMillis, false
                             )
                         } else {
                             Toast.makeText(

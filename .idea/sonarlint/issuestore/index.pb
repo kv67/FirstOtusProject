@@ -25,5 +25,3 @@ w
 Gapp/src/main/java/kve/ru/firstproject/fragments/FavoriteListFragment.kt,5\a\5ac93ebf3c4b70b1cea0aa8986df1f2e21602a06
 s
 Capp/src/main/java/kve/ru/firstproject/fragments/FilmListFragment.kt,0\d\0d66a2afd887f7f3c635099852508db7c905e5f1
-c
-3app/src/main/java/kve/ru/firstproject/db/FilmDao.kt,6\8\681be5d0e65ffccce246445cf061afe9f3387b05

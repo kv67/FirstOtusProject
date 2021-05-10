@@ -24,26 +24,30 @@ class FilmNotificationPublisher : BroadcastReceiver() {
         private const val NOTIFICATION_CHANNEL_NAME = "Channel_name_001"
         private const val NOTIFICATION_CHANNEL_ID = "Channel_id_001"
 
-        fun cancelNotification(
-            context: Context,
-            filmId: Int
-        ) {
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                filmId,
-                Intent(context, FilmNotificationPublisher::class.java),
-                PendingIntent.FLAG_CANCEL_CURRENT
-            )
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            alarmManager.cancel(pendingIntent)
+        private val repository = FilmRepository()
+
+        private fun getChannel(): NotificationChannel? {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val notificationChannel = NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID,
+                    NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT
+                )
+                notificationChannel.enableVibration(true)
+                notificationChannel.vibrationPattern =
+                    longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
+                notificationChannel
+            } else {
+                null
+            }
         }
 
-        fun sendNotification(
+        private fun sendNotification(
             context: Context,
             filmId: Int,
             filmName: String?,
             filmDsc: String?,
-            time: Long
+            time: Long,
+            sendNow: Boolean
         ) {
             val launchIntent =
                 context.packageManager.getLaunchIntentForPackage("kve.ru.firstproject")
@@ -69,32 +73,68 @@ class FilmNotificationPublisher : BroadcastReceiver() {
                     setContentIntent(contentIntent)
                 }
 
-            val notificationIntent = Intent(context, FilmNotificationPublisher::class.java)
-            notificationIntent.putExtra(NOTIFICATION_ID, filmId)
-            notificationIntent.putExtra(NOTIFICATION, mBuilder.build())
+            if (sendNow) {
+                if (filmId > 0) {
+                    val notificationManager =
+                        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        getChannel()?.let { channel ->
+                            notificationManager.createNotificationChannel(channel)
+                        }
+                    }
+                    notificationManager.notify(filmId, mBuilder.build())
+                }
+            } else {
+                val notificationIntent = Intent(context, FilmNotificationPublisher::class.java)
+                notificationIntent.putExtra(NOTIFICATION_ID, filmId)
+                notificationIntent.putExtra(NOTIFICATION, mBuilder.build())
+                val pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    filmId,
+                    notificationIntent,
+                    PendingIntent.FLAG_CANCEL_CURRENT
+                )
+                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                    alarmManager.setAlarmClock(
+                        AlarmManager.AlarmClockInfo(time, pendingIntent),
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        time,
+                        pendingIntent
+                    )
+                }
+            }
+        }
+
+        fun cancelNotification(
+            context: Context,
+            filmId: Int
+        ) {
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
                 filmId,
-                notificationIntent,
+                Intent(context, FilmNotificationPublisher::class.java),
                 PendingIntent.FLAG_CANCEL_CURRENT
             )
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                alarmManager.setAlarmClock(
-                    AlarmManager.AlarmClockInfo(time, pendingIntent),
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    time,
-                    pendingIntent
-                )
+            alarmManager.cancel(pendingIntent)
+        }
+
+        fun sendFilmNotification(
+            context: Context,
+            filmId: Int, time: Long,
+            sendNow: Boolean
+        ) {
+            repository.getFilmForNotification(filmId) {film ->
+                sendNotification(context, film.id, film.name, film.dsc, time, sendNow)
             }
         }
     }
 
-    private val repository: FilmRepository = FilmRepository()
 
     override fun onReceive(context: Context?, intent: Intent?) {
         intent?.let {
@@ -106,14 +146,9 @@ class FilmNotificationPublisher : BroadcastReceiver() {
                     val notificationManager =
                         context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        val notificationChannel = NotificationChannel(
-                            NOTIFICATION_CHANNEL_ID,
-                            NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT
-                        )
-                        notificationChannel.enableVibration(true)
-                        notificationChannel.vibrationPattern =
-                            longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
-                        notificationManager.createNotificationChannel(notificationChannel)
+                        getChannel()?.let { channel ->
+                            notificationManager.createNotificationChannel(channel)
+                        }
                     }
                     repository.processNotification(filmId) {
                         notificationManager.notify(filmId, notification)

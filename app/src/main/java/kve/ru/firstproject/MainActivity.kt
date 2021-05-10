@@ -33,6 +33,7 @@ import kve.ru.firstproject.fragments.NotificationListFragment
 import kve.ru.firstproject.model.FilmViewModel
 import kve.ru.firstproject.service.FilmNotificationPublisher
 import kve.ru.firstproject.utils.FeatureToggles
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -100,10 +101,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val onEvent: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
-                it.getStringExtra(FilmNotificationPublisher.FILM_ID)?.let {id ->
-                    viewModel.getFilmById(id.toInt())
-                    showFilmDetail()
-                    return
+                it.getStringExtra(FilmNotificationPublisher.FILM_ID)?.let { id ->
+                    context?.let { cnt ->
+                        FilmNotificationPublisher.sendFilmNotification(
+                            cnt,
+                            id.toInt(),
+                            Calendar.getInstance().timeInMillis + 1000,
+                            true
+                        )
+                    }
+                    it.removeExtra(FilmNotificationPublisher.FILM_ID)
                 }
 
                 var title = ""
@@ -173,7 +180,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         intent?.let {
             it.getIntExtra(FilmDetailFragment.EXTRA_FILM_ID, 0).let { id ->
-                Log.d(TAG,  "EXTRA_FILM_ID = $id")
+                Log.d(TAG, "EXTRA_FILM_ID = $id")
                 if (id > 0) {
                     viewModel.getFilmById(id)
                     showFilmDetail()
@@ -182,7 +189,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             it.getStringExtra(FilmNotificationPublisher.FILM_ID)?.let { id ->
-                Log.d(TAG,  "FILM_ID = $id")
+                Log.d(TAG, "FILM_ID = $id")
                 if (id.isNotEmpty()) {
                     viewModel.getFilmById(id.toInt())
                     showFilmDetail()
@@ -303,7 +310,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 ) {
                     onBackPressed()
                 }
-                if ( navigationView.menu.findItem(R.id.nav_delete_cache).isVisible) {
+                if (navigationView.menu.findItem(R.id.nav_delete_cache).isVisible) {
                     navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
                 }
             }

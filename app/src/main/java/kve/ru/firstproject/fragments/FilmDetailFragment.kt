@@ -121,8 +121,8 @@ class FilmDetailFragment : Fragment() {
                                     film.dsc
                                 )
                             )
-                            FilmNotificationPublisher.sendNotification(
-                                requireContext(), film.id, film.name, film.dsc, cl.timeInMillis
+                            FilmNotificationPublisher.sendFilmNotification(
+                                requireContext(), film.id, cl.timeInMillis, false
                             )
                         } else {
                             Toast.makeText(

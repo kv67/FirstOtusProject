@@ -190,4 +190,14 @@ class FilmRepository {
         Executors.newSingleThreadScheduledExecutor()
             .schedule(task, 20, TimeUnit.MILLISECONDS)
     }
+
+    fun getFilmForNotification(id: Int, listener: ((film: Film) -> Unit)) {
+        val task = Runnable {
+            Db.getInstance(App.instance)?.getFilmDao()?.getById(id)?.let {
+                listener.invoke(it)
+            }
+        }
+        Executors.newSingleThreadScheduledExecutor()
+            .schedule(task, 20, TimeUnit.MILLISECONDS)
+    }
 }

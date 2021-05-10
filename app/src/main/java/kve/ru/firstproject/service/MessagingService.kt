@@ -21,7 +21,7 @@ class MessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(msg: RemoteMessage) {
         // Check if message contains a data payload.
         if (msg.data.isNotEmpty()) {
-            Log.d(MainActivity.TAG, "Message data payload: ${msg.data}")
+            Log.d(TAG, "Message data payload: ${msg.data}")
             val intent = Intent(MainActivity.MESSAGE_EVENT)
 
             msg.data[FilmNotificationPublisher.FILM_ID]?.let {
