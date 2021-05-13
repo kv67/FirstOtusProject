@@ -2,7 +2,11 @@ package kve.ru.firstproject
 
 import android.app.Application
 import android.util.Log
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.messaging.ktx.messaging
+import com.google.firebase.messaging.ktx.remoteMessage
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import kve.ru.firstproject.utils.FeatureToggles
@@ -21,6 +25,8 @@ class App : Application() {
         lateinit var instance: App
             private set
         private const val TAG = "MainApp"
+        private const val SENDER_ID = "BEST_FILMS_SENDER"
+        var token: String? = null
     }
 
     override fun onCreate() {
@@ -28,7 +34,33 @@ class App : Application() {
         instance = this
         initRetrofit()
         initRemoteConfig()
+        getToken()
     }
+
+    private fun getToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+
+            // Get new FCM registration token
+            token = task.result
+            Log.d(TAG, "Current token: $token")
+        })
+    }
+
+//    private fun sendMsg(msg: String) {
+//        messageId++
+//        val fm = Firebase.messaging
+//        fm.send(remoteMessage("$SENDER_ID@fcm.googleapis.com") {
+//            setMessageId(messageId.toString())
+//            addData("my_message", "Hello World")
+//            addData("my_action", "SAY_HELLO")
+//        })
+//
+//
+//    }
 
     private fun initRemoteConfig() {
         val configSettings = remoteConfigSettings {

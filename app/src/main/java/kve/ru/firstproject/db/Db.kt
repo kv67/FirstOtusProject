@@ -13,7 +13,7 @@ object Db {
                     context,
                     AppDb::class.java, "films.db"
                 )
-                    .fallbackToDestructiveMigration()
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                     .build()
             }
         }

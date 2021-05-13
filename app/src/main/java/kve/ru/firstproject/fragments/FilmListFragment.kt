@@ -94,7 +94,17 @@ class FilmListFragment : Fragment() {
 
     private fun getColumnCount(): Int {
         val displayMetrics = DisplayMetrics()
-        requireActivity().windowManager.defaultDisplay.getMetrics(displayMetrics)
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            val display = requireActivity().display
+            display?.getRealMetrics(displayMetrics)
+        } else {
+            @Suppress("DEPRECATION")
+            val display = requireActivity().windowManager.defaultDisplay
+            @Suppress("DEPRECATION")
+            display.getMetrics(displayMetrics)
+        }
+
         val width: Int = (displayMetrics.widthPixels / displayMetrics.density).toInt()
         return if (width / 185 > 2) width / 185 else 2
     }

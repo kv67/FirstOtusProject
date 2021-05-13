@@ -2,14 +2,16 @@ package kve.ru.firstproject
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.DialogInterface
-import android.content.DialogInterface.BUTTON_NEGATIVE
-import android.content.DialogInterface.BUTTON_POSITIVE
-import android.content.Intent
+import android.content.*
+import android.content.DialogInterface.*
 import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -17,7 +19,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.ViewModelProvider
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.ktx.Firebase
@@ -25,16 +29,23 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import kve.ru.firstproject.fragments.FavoriteListFragment
 import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.fragments.FilmListFragment
+import kve.ru.firstproject.fragments.NotificationListFragment
 import kve.ru.firstproject.model.FilmViewModel
+import kve.ru.firstproject.service.FilmNotificationPublisher
 import kve.ru.firstproject.utils.FeatureToggles
+import java.util.*
+
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     companion object {
+        const val TAG = "Main_activity"
+        const val MESSAGE_EVENT = "kve.ru.firstproject.MESSAGE_EVENT"
+
         fun doExit(activity: Activity) {
             val bld: AlertDialog.Builder = AlertDialog.Builder(activity)
             val lst =
-                DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                OnClickListener { dialog: DialogInterface, which ->
                     when (which) {
                         BUTTON_NEGATIVE -> dialog.dismiss()
                         BUTTON_POSITIVE -> activity.finish()
@@ -71,7 +82,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private val remoteConfig = Firebase.remoteConfig
     private val drawer by lazy {
         findViewById<DrawerLayout>(R.id.drawer_layout)
     }
@@ -88,24 +98,57 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         ViewModelProvider(this)[FilmViewModel::class.java]
     }
 
+    private val onEvent: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let {
+                it.getStringExtra(FilmNotificationPublisher.FILM_ID)?.let { id ->
+                    context?.let { cnt ->
+                        FilmNotificationPublisher.sendFilmNotification(
+                            cnt,
+                            id.toInt(),
+                            Calendar.getInstance().timeInMillis + 1000,
+                            true
+                        )
+                    }
+                    it.removeExtra(FilmNotificationPublisher.FILM_ID)
+                }
+
+                var title = ""
+                it.getStringExtra(FilmNotificationPublisher.FILM_TITLE)?.let { filmTitle ->
+                    title = filmTitle
+                    Log.d(TAG, "Received msg -> film title: $title")
+                    it.removeExtra(FilmNotificationPublisher.FILM_TITLE)
+                }
+                var dsc = ""
+                it.getStringExtra(FilmNotificationPublisher.FILM_DSC)?.let { filmDsc ->
+                    dsc = filmDsc
+                    it.removeExtra(FilmNotificationPublisher.FILM_DSC)
+                }
+
+                if (title.isNotEmpty()) {
+                    showExtraFilmData(
+                        title,
+                        dsc,
+                        it.getStringExtra(FilmNotificationPublisher.FILM_POSTER)
+                    )
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         setSupportActionBar(toolbar)
         initDrawer()
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(onEvent, IntentFilter(MESSAGE_EVENT))
 
         viewModel.isSelected.observe(this, { selected ->
             selected?.let {
                 if (it) {
-                    supportFragmentManager.beginTransaction()
-                        .replace(
-                            R.id.fragmentContainer,
-                            FilmDetailFragment(),
-                            FilmDetailFragment.TAG
-                        )
-                        .addToBackStack(null)
-                        .commit()
+                    showFilmDetail()
                 }
             }
         })
@@ -134,6 +177,67 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             viewModel.loadData()
             showFilmList()
         }
+
+        intent?.let {
+            it.getIntExtra(FilmDetailFragment.EXTRA_FILM_ID, 0).let { id ->
+                Log.d(TAG, "EXTRA_FILM_ID = $id")
+                if (id > 0) {
+                    viewModel.getFilmById(id)
+                    showFilmDetail()
+                }
+                it.removeExtra(FilmDetailFragment.EXTRA_FILM_ID)
+            }
+
+            it.getStringExtra(FilmNotificationPublisher.FILM_ID)?.let { id ->
+                Log.d(TAG, "FILM_ID = $id")
+                if (id.isNotEmpty()) {
+                    viewModel.getFilmById(id.toInt())
+                    showFilmDetail()
+                }
+                it.removeExtra(FilmNotificationPublisher.FILM_ID)
+            }
+
+            it.getStringExtra(FilmNotificationPublisher.FILM_TITLE)?.let { title ->
+                Log.d(TAG, "Firebase film title: $title")
+                var dsc = ""
+                it.getStringExtra(FilmNotificationPublisher.FILM_DSC)?.let { filmDsc ->
+                    dsc = filmDsc
+                }
+
+                showExtraFilmData(
+                    title, dsc, it.getStringExtra(FilmNotificationPublisher.FILM_POSTER)
+                )
+
+                it.removeExtra(FilmNotificationPublisher.FILM_TITLE)
+            }
+        }
+    }
+
+    private fun showExtraFilmData(title: String, dsc: String, poster: String?) {
+        val bld: AlertDialog.Builder = AlertDialog.Builder(this)
+        bld.setNeutralButton(getString(R.string.button_text_ok)) { dialog: DialogInterface, which ->
+            when (which) {
+                BUTTON_NEUTRAL -> dialog.dismiss()
+            }
+        }
+        bld.setTitle(title)
+        poster?.let {
+            val view: View =
+                LayoutInflater.from(this).inflate(R.layout.alert_dialog_view, null)
+            val filmDsc = view.findViewById<TextView>(R.id.textViewMsgDsc)
+            filmDsc.text = dsc
+            val image = view.findViewById<ImageView>(R.id.dialog_image_view)
+            Glide.with(applicationContext)
+                .load(it)
+                .placeholder(R.drawable.ic_baseline_image_24)
+                .error(R.drawable.ic_baseline_error_24)
+                .into(image)
+            bld.setView(view)
+        } ?: run {
+            bld.setMessage(dsc)
+        }
+        val dialog: AlertDialog = bld.create()
+        dialog.show()
     }
 
     private fun showFilmList() {
@@ -143,6 +247,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 FilmListFragment(),
                 FilmListFragment.TAG
             )
+            .commit()
+    }
+
+    private fun showFilmDetail() {
+        supportFragmentManager.beginTransaction()
+            .replace(
+                R.id.fragmentContainer,
+                FilmDetailFragment(),
+                FilmDetailFragment.TAG
+            )
+            .addToBackStack(null)
             .commit()
     }
 
@@ -157,7 +272,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             .setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark))
         navigationView.menu.findItem(R.id.nav_home).isChecked = true
         navigationView.menu.findItem(R.id.nav_delete_cache).isVisible =
-            remoteConfig.getBoolean(FeatureToggles.CACHE_CLEAR_ENABLED)
+            Firebase.remoteConfig.getBoolean(FeatureToggles.CACHE_CLEAR_ENABLED)
     }
 
     override fun onBackPressed() {
@@ -171,7 +286,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             val bld: AlertDialog.Builder = AlertDialog.Builder(this)
             val lst =
-                DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                OnClickListener { dialog: DialogInterface, which ->
                     when (which) {
                         BUTTON_NEGATIVE -> dialog.dismiss()
                         BUTTON_POSITIVE -> super.onBackPressed()
@@ -195,11 +310,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 ) {
                     onBackPressed()
                 }
-                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
+                if (navigationView.menu.findItem(R.id.nav_delete_cache).isVisible) {
+                    navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = true
+                }
             }
             R.id.nav_favorites -> {
                 if (fragment.tag != FavoriteListFragment.TAG) {
-                    if (fragment.tag == FilmDetailFragment.TAG) {
+                    if (fragment.tag != FilmListFragment.TAG &&
+                        supportFragmentManager.backStackEntryCount > 0
+                    ) {
                         onBackPressed()
                     }
                     supportFragmentManager.beginTransaction()
@@ -207,6 +326,24 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             R.id.fragmentContainer,
                             FavoriteListFragment(),
                             FavoriteListFragment.TAG
+                        )
+                        .addToBackStack(null)
+                        .commit()
+                }
+                navigationView.menu.findItem(R.id.nav_delete_cache).isEnabled = false
+            }
+            R.id.nav_notifications -> {
+                if (fragment.tag != NotificationListFragment.TAG) {
+                    if (fragment.tag != FilmListFragment.TAG &&
+                        supportFragmentManager.backStackEntryCount > 0
+                    ) {
+                        onBackPressed()
+                    }
+                    supportFragmentManager.beginTransaction()
+                        .replace(
+                            R.id.fragmentContainer,
+                            NotificationListFragment(),
+                            NotificationListFragment.TAG
                         )
                         .addToBackStack(null)
                         .commit()
@@ -226,7 +363,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.nav_delete_cache -> {
                 val bld: AlertDialog.Builder = AlertDialog.Builder(this)
                 val lst =
-                    DialogInterface.OnClickListener { dialog: DialogInterface, which ->
+                    OnClickListener { dialog: DialogInterface, which ->
                         when (which) {
                             BUTTON_NEGATIVE -> dialog.dismiss()
                             BUTTON_POSITIVE -> {

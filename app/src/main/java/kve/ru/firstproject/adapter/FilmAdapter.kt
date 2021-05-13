@@ -84,8 +84,7 @@ class FilmAdapter(
                 ResourcesCompat.getColor(
                     itemView.resources,
                     R.color.white, null
-                )
-                    .toDrawable()
+                ).toDrawable()
             imageViewStar.setImageResource(
                 if (film.isFavorite == 1) R.drawable.star_gold else R.drawable.star_silver
             )

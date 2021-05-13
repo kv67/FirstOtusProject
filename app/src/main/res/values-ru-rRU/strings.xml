@@ -38,4 +38,10 @@
     <string name="works_only_with_films_msg">Работает только со списком фильмов</string>
     <string name="load_data_error_msg">"Ошибка при загрузке данных: "</string>
     <string name="repeat_caption">Повторить</string>
+    <string name="notify_caption">Напомнить</string>
+    <string name="notification_date_hint">Дата напоминания</string>
+    <string name="button_text_ok">ОК</string>
+    <string name="notifications_title">Напоминания</string>
+    <string name="notification_removed_msg">Напоминание удалено</string>
+    <string name="current_time_passed_msg">Указанное время уже прошло</string>
 </resources>
