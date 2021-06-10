@@ -6,10 +6,14 @@ import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.R
+import kve.ru.firstproject.db.Film
 import kve.ru.firstproject.fragments.FilmDetailFragment
-import kve.ru.firstproject.repositories.FilmRepository
+import kve.ru.firstproject.model.FilmViewModel
 
 
 class FilmNotificationPublisher : BroadcastReceiver() {
@@ -23,8 +27,6 @@ class FilmNotificationPublisher : BroadcastReceiver() {
         const val FILM_POSTER = "film_poster"
         private const val NOTIFICATION_CHANNEL_NAME = "Channel_name_001"
         private const val NOTIFICATION_CHANNEL_ID = "Channel_id_001"
-
-        private val repository = FilmRepository()
 
         private fun getChannel(): NotificationChannel? {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -52,7 +54,7 @@ class FilmNotificationPublisher : BroadcastReceiver() {
             val launchIntent =
                 context.packageManager.getLaunchIntentForPackage("kve.ru.firstproject")
             launchIntent?.putExtra(FilmDetailFragment.EXTRA_FILM_ID, filmId)
-            launchIntent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            launchIntent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)  // FLAG_ACTIVITY_CLEAR_TOP
             val contentIntent =
                 PendingIntent.getActivity(
                     context,
@@ -126,23 +128,24 @@ class FilmNotificationPublisher : BroadcastReceiver() {
 
         fun sendFilmNotification(
             context: Context,
-            filmId: Int, time: Long,
+            film: Film, time: Long,
             sendNow: Boolean
         ) {
-            repository.getFilmForNotification(filmId) {film ->
-                sendNotification(context, film.id, film.name, film.dsc, time, sendNow)
-            }
+            Log.d(
+                FilmViewModel.TAG,
+                "FilmNotificationPublisher sendFilmNotification: film id = ${film.id}}"
+            )
+            sendNotification(context, film.id, film.name, film.dsc, time, sendNow)
         }
     }
 
-
     override fun onReceive(context: Context?, intent: Intent?) {
         intent?.let {
-            val filmId = it.getIntExtra(NOTIFICATION_ID, 0)
+            val noteId = it.getIntExtra(NOTIFICATION_ID, 0)
             val notification: Notification? = it.getParcelableExtra(NOTIFICATION)
 
             notification?.let {
-                if (filmId > 0) {
+                if (noteId > 0) {
                     val notificationManager =
                         context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -150,9 +153,12 @@ class FilmNotificationPublisher : BroadcastReceiver() {
                             notificationManager.createNotificationChannel(channel)
                         }
                     }
-                    repository.processNotification(filmId) {
-                        notificationManager.notify(filmId, notification)
-                    }
+                    Log.d(FilmViewModel.TAG, "Service onReceive: noteId = $noteId")
+
+                    val msgIntent = Intent(MainActivity.MESSAGE_EVENT)
+                    msgIntent.putExtra(NOTIFICATION_ID, noteId)
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(msgIntent)
+                    notificationManager.notify(noteId, notification)
                 }
             }
         }

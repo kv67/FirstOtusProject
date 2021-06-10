@@ -6,15 +6,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.R
 import kve.ru.firstproject.adapter.FavoriteAdapter
+import kve.ru.firstproject.di.DaggerAppComponent
+import kve.ru.firstproject.di.RoomModule
 import kve.ru.firstproject.model.FilmViewModel
 import kve.ru.firstproject.utils.FavoriteItemDecoration
+import javax.inject.Inject
 
 class FavoriteListFragment : Fragment() {
 
@@ -22,9 +24,8 @@ class FavoriteListFragment : Fragment() {
         const val TAG = "FavoriteListFragment"
     }
 
-    private val viewModel by lazy {
-        ViewModelProvider(requireActivity())[FilmViewModel::class.java]
-    }
+    @Inject
+    lateinit var viewModel: FilmViewModel
 
     private var recyclerViewFavorites: RecyclerView? = null
 
@@ -33,7 +34,6 @@ class FavoriteListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        retainInstance = true
         return inflater.inflate(R.layout.fragment_favorite_list, container, false)
     }
 
@@ -45,6 +45,15 @@ class FavoriteListFragment : Fragment() {
                 layoutManager = GridLayoutManager(requireContext(), getColumnCount())
                 addItemDecoration(FavoriteItemDecoration(requireContext(), 15))
             }
+
+        DaggerAppComponent.builder()  //.appModule(AppModule(requireActivity().application))
+            .roomModule(
+                RoomModule(
+                    requireActivity().application,
+                    requireActivity() as MainActivity
+                )
+            ).build()
+            .inject(this)
 
         initTouchHelper {
             (recyclerViewFavorites?.adapter as FavoriteAdapter).getItemByPos(it)?.let { film ->

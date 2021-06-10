@@ -18,7 +18,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -26,6 +25,8 @@ import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
+import kve.ru.firstproject.di.DaggerAppComponent
+import kve.ru.firstproject.di.RoomModule
 import kve.ru.firstproject.fragments.FavoriteListFragment
 import kve.ru.firstproject.fragments.FilmDetailFragment
 import kve.ru.firstproject.fragments.FilmListFragment
@@ -34,6 +35,7 @@ import kve.ru.firstproject.model.FilmViewModel
 import kve.ru.firstproject.service.FilmNotificationPublisher
 import kve.ru.firstproject.utils.FeatureToggles
 import java.util.*
+import javax.inject.Inject
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -94,20 +96,26 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val progressBarLoading by lazy {
         findViewById<ProgressBar>(R.id.progressBarLoading)
     }
-    private val viewModel by lazy {
-        ViewModelProvider(this)[FilmViewModel::class.java]
-    }
+
+    @Inject
+    lateinit var viewModel: FilmViewModel
 
     private val onEvent: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
+                val noteId = it.getIntExtra(FilmNotificationPublisher.NOTIFICATION_ID, 0)
+                if (noteId > 0) {
+                    Log.d(FilmViewModel.TAG, "Received msg -> notification id: $noteId")
+                    viewModel.deleteNotification(noteId)
+                    it.removeExtra(FilmNotificationPublisher.NOTIFICATION_ID)
+                }
+
                 it.getStringExtra(FilmNotificationPublisher.FILM_ID)?.let { id ->
                     context?.let { cnt ->
-                        FilmNotificationPublisher.sendFilmNotification(
-                            cnt,
-                            id.toInt(),
-                            Calendar.getInstance().timeInMillis + 1000,
-                            true
+                        Log.d(FilmViewModel.TAG, "Received msg -> film id: $id")
+                        viewModel.sendNotification(
+                            cnt, id.toInt(),
+                            Calendar.getInstance().timeInMillis + 1000, true
                         )
                     }
                     it.removeExtra(FilmNotificationPublisher.FILM_ID)
@@ -144,6 +152,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         initDrawer()
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(onEvent, IntentFilter(MESSAGE_EVENT))
+
+        DaggerAppComponent.builder()
+            .roomModule(RoomModule(application, this)).build().inject(this)
 
         viewModel.isSelected.observe(this, { selected ->
             selected?.let {
@@ -183,7 +194,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Log.d(TAG, "EXTRA_FILM_ID = $id")
                 if (id > 0) {
                     viewModel.getFilmById(id)
-                    showFilmDetail()
                 }
                 it.removeExtra(FilmDetailFragment.EXTRA_FILM_ID)
             }
@@ -192,7 +202,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Log.d(TAG, "FILM_ID = $id")
                 if (id.isNotEmpty()) {
                     viewModel.getFilmById(id.toInt())
-                    showFilmDetail()
                 }
                 it.removeExtra(FilmNotificationPublisher.FILM_ID)
             }
@@ -207,7 +216,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 showExtraFilmData(
                     title, dsc, it.getStringExtra(FilmNotificationPublisher.FILM_POSTER)
                 )
-
                 it.removeExtra(FilmNotificationPublisher.FILM_TITLE)
             }
         }
@@ -384,4 +392,5 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawer.closeDrawer(GravityCompat.START)
         return true
     }
+
 }

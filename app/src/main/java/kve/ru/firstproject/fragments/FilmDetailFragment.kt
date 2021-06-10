@@ -10,15 +10,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.R
 import kve.ru.firstproject.db.Film
 import kve.ru.firstproject.db.Notification
+import kve.ru.firstproject.di.DaggerAppComponent
+import kve.ru.firstproject.di.RoomModule
 import kve.ru.firstproject.model.FilmViewModel
-import kve.ru.firstproject.service.FilmNotificationPublisher
 import java.util.*
+import javax.inject.Inject
 
 class FilmDetailFragment : Fragment() {
 
@@ -44,9 +46,9 @@ class FilmDetailFragment : Fragment() {
     private val buttonNotify by lazy {
         view?.findViewById<FloatingActionButton>(R.id.fbuNotify)
     }
-    private val viewModel by lazy {
-        ViewModelProvider(requireActivity())[FilmViewModel::class.java]
-    }
+
+    @Inject
+    lateinit var viewModel: FilmViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,6 +62,15 @@ class FilmDetailFragment : Fragment() {
         buttonNotify?.setOnClickListener {
             setDateTime()
         }
+
+        DaggerAppComponent.builder()   // .appModule(AppModule(requireActivity().application))
+            .roomModule(
+                RoomModule(
+                    requireActivity().application,
+                    requireActivity() as MainActivity
+                )
+            ).build()
+            .inject(this)
 
         viewModel.selectedFilm.observe(viewLifecycleOwner, {
             it?.let {
@@ -114,15 +125,8 @@ class FilmDetailFragment : Fragment() {
                         cl.set(y, m, d, h, mnt)
                         if (Calendar.getInstance().timeInMillis < cl.timeInMillis) {
                             viewModel.addNotification(
-                                Notification(
-                                    film.id,
-                                    film.name,
-                                    dateTime,
-                                    film.dsc
-                                )
-                            )
-                            FilmNotificationPublisher.sendFilmNotification(
-                                requireContext(), film.id, cl.timeInMillis, false
+                                Notification(film.id, film.name, dateTime, film.dsc),
+                                requireContext(), cl.timeInMillis, false
                             )
                         } else {
                             Toast.makeText(
