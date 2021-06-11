@@ -67,10 +67,10 @@ class FilmViewModel @Inject constructor(private val filmRepository: FilmReposito
     val loading: LiveData<Boolean>
         get() = loadingLiveData
 
-//    override fun onCleared() {
-//        compositeDisposable.dispose()
-//        super.onCleared()
-//    }
+    override fun onCleared() {
+        compositeDisposable.dispose()
+        super.onCleared()
+    }
 
     private fun updateFilms() {
         filmRepository.getFilms()
@@ -177,7 +177,6 @@ class FilmViewModel @Inject constructor(private val filmRepository: FilmReposito
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { it ->
-                Log.d(TAG, "sendFilmNotification subscribe...")
                 it?.let { film ->
                     Log.d(TAG, "sendFilmNotification: film id = ${film.id}")
                     FilmNotificationPublisher.sendFilmNotification(

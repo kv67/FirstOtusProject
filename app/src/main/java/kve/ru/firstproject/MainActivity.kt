@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     @Inject
     lateinit var viewModel: FilmViewModel
-    // lateinit var onEvent: BroadcastReceiver
+    private lateinit var onEvent: BroadcastReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -175,7 +175,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        val onEvent = object : BroadcastReceiver() {
+        onEvent = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 intent?.let {
                     val noteId = it.getIntExtra(FilmNotificationPublisher.NOTIFICATION_ID, 0)
@@ -221,6 +221,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(onEvent, IntentFilter(MESSAGE_EVENT))
 
+    }
+
+    override fun onDestroy() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(onEvent)
+        super.onDestroy()
     }
 
     private fun showExtraFilmData(title: String, dsc: String, poster: String?) {
