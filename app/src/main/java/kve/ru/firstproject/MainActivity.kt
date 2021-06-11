@@ -99,50 +99,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     @Inject
     lateinit var viewModel: FilmViewModel
-
-    private val onEvent: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            intent?.let {
-                val noteId = it.getIntExtra(FilmNotificationPublisher.NOTIFICATION_ID, 0)
-                if (noteId > 0) {
-                    Log.d(FilmViewModel.TAG, "Received msg -> notification id: $noteId")
-                    viewModel.deleteNotification(noteId)
-                    it.removeExtra(FilmNotificationPublisher.NOTIFICATION_ID)
-                }
-
-                it.getStringExtra(FilmNotificationPublisher.FILM_ID)?.let { id ->
-                    context?.let { cnt ->
-                        Log.d(FilmViewModel.TAG, "Received msg -> film id: $id")
-                        viewModel.sendNotification(
-                            cnt, id.toInt(),
-                            Calendar.getInstance().timeInMillis + 1000, true
-                        )
-                    }
-                    it.removeExtra(FilmNotificationPublisher.FILM_ID)
-                }
-
-                var title = ""
-                it.getStringExtra(FilmNotificationPublisher.FILM_TITLE)?.let { filmTitle ->
-                    title = filmTitle
-                    Log.d(TAG, "Received msg -> film title: $title")
-                    it.removeExtra(FilmNotificationPublisher.FILM_TITLE)
-                }
-                var dsc = ""
-                it.getStringExtra(FilmNotificationPublisher.FILM_DSC)?.let { filmDsc ->
-                    dsc = filmDsc
-                    it.removeExtra(FilmNotificationPublisher.FILM_DSC)
-                }
-
-                if (title.isNotEmpty()) {
-                    showExtraFilmData(
-                        title,
-                        dsc,
-                        it.getStringExtra(FilmNotificationPublisher.FILM_POSTER)
-                    )
-                }
-            }
-        }
-    }
+    // lateinit var onEvent: BroadcastReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -150,8 +107,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         setSupportActionBar(toolbar)
         initDrawer()
-        LocalBroadcastManager.getInstance(this)
-            .registerReceiver(onEvent, IntentFilter(MESSAGE_EVENT))
 
         DaggerAppComponent.builder()
             .roomModule(RoomModule(application, this)).build().inject(this)
@@ -219,6 +174,53 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 it.removeExtra(FilmNotificationPublisher.FILM_TITLE)
             }
         }
+
+        val onEvent = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.let {
+                    val noteId = it.getIntExtra(FilmNotificationPublisher.NOTIFICATION_ID, 0)
+                    if (noteId > 0) {
+                        Log.d(FilmViewModel.TAG, "Received msg -> notification id: $noteId")
+                        viewModel.deleteNotification(noteId)
+                        it.removeExtra(FilmNotificationPublisher.NOTIFICATION_ID)
+                    }
+
+                    it.getStringExtra(FilmNotificationPublisher.FILM_ID)?.let { id ->
+                        context?.let { cnt ->
+                            Log.d(FilmViewModel.TAG, "Received msg -> film id: $id")
+                            viewModel.sendNotification(
+                                cnt, id.toInt(),
+                                Calendar.getInstance().timeInMillis + 1000, true
+                            )
+                        }
+                        it.removeExtra(FilmNotificationPublisher.FILM_ID)
+                    }
+
+                    var title = ""
+                    it.getStringExtra(FilmNotificationPublisher.FILM_TITLE)?.let { filmTitle ->
+                        title = filmTitle
+                        Log.d(TAG, "Received msg -> film title: $title")
+                        it.removeExtra(FilmNotificationPublisher.FILM_TITLE)
+                    }
+                    var dsc = ""
+                    it.getStringExtra(FilmNotificationPublisher.FILM_DSC)?.let { filmDsc ->
+                        dsc = filmDsc
+                        it.removeExtra(FilmNotificationPublisher.FILM_DSC)
+                    }
+
+                    if (title.isNotEmpty()) {
+                        showExtraFilmData(
+                            title,
+                            dsc,
+                            it.getStringExtra(FilmNotificationPublisher.FILM_POSTER)
+                        )
+                    }
+                }
+            }
+        }
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(onEvent, IntentFilter(MESSAGE_EVENT))
+
     }
 
     private fun showExtraFilmData(title: String, dsc: String, poster: String?) {

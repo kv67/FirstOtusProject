@@ -69,7 +69,6 @@ class FilmViewModel @Inject constructor(private val filmRepository: FilmReposito
 
 //    override fun onCleared() {
 //        compositeDisposable.dispose()
-//        compositeDisposable.clear()
 //        super.onCleared()
 //    }
 
