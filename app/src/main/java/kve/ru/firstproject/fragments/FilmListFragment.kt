@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -16,10 +15,13 @@ import kve.ru.firstproject.MainActivity
 import kve.ru.firstproject.R
 import kve.ru.firstproject.adapter.FilmAdapter
 import kve.ru.firstproject.db.Film
+import kve.ru.firstproject.di.DaggerAppComponent
+import kve.ru.firstproject.di.RoomModule
 import kve.ru.firstproject.model.FilmViewModel
 import kve.ru.firstproject.utils.FavoriteItemDecoration
 import kve.ru.firstproject.utils.FeatureToggles
 import kve.ru.firstproject.utils.FilmsItemAnimator
+import javax.inject.Inject
 
 class FilmListFragment : Fragment() {
 
@@ -28,9 +30,8 @@ class FilmListFragment : Fragment() {
         const val STAR_ANIMATE = "STAR_ANIMATE"
     }
 
-    private val viewModel by lazy {
-        ViewModelProvider(requireActivity())[FilmViewModel::class.java]
-    }
+    @Inject
+    lateinit var viewModel: FilmViewModel
 
     private var recyclerViewFilms: RecyclerView? = null
 
@@ -39,7 +40,6 @@ class FilmListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        retainInstance = true
         return inflater.inflate(R.layout.fragment_film_list, container, false)
     }
 
@@ -47,6 +47,15 @@ class FilmListFragment : Fragment() {
         requireActivity().title =
             Firebase.remoteConfig.getString(FeatureToggles.APP_TITLE)
         setHasOptionsMenu(true)
+
+        DaggerAppComponent.builder()    // .appModule(AppModule(requireActivity().application))
+            .roomModule(
+                RoomModule(
+                    requireActivity().application,
+                    requireActivity() as MainActivity
+                )
+            ).build()
+            .inject(this)
 
         recyclerViewFilms = view.findViewById(R.id.recyclerViewFilmsFragment)
         recyclerViewFilms?.apply {

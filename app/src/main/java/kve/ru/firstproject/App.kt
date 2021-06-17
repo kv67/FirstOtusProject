@@ -5,10 +5,9 @@ import android.util.Log
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.ktx.messaging
-import com.google.firebase.messaging.ktx.remoteMessage
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
+import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import kve.ru.firstproject.utils.FeatureToggles
 import kve.ru.firstproject.utils.NetworkUtils
 import okhttp3.OkHttpClient
@@ -25,7 +24,6 @@ class App : Application() {
         lateinit var instance: App
             private set
         private const val TAG = "MainApp"
-        private const val SENDER_ID = "BEST_FILMS_SENDER"
         var token: String? = null
     }
 
@@ -49,18 +47,6 @@ class App : Application() {
             Log.d(TAG, "Current token: $token")
         })
     }
-
-//    private fun sendMsg(msg: String) {
-//        messageId++
-//        val fm = Firebase.messaging
-//        fm.send(remoteMessage("$SENDER_ID@fcm.googleapis.com") {
-//            setMessageId(messageId.toString())
-//            addData("my_message", "Hello World")
-//            addData("my_action", "SAY_HELLO")
-//        })
-//
-//
-//    }
 
     private fun initRemoteConfig() {
         val configSettings = remoteConfigSettings {
@@ -94,6 +80,7 @@ class App : Application() {
         val retrofit = Retrofit.Builder()
             .baseUrl(NetworkUtils.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .client(client)
             .build()
 

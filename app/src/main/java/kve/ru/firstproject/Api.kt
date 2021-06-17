@@ -1,7 +1,7 @@
 package kve.ru.firstproject
 
+import io.reactivex.Single
 import kve.ru.firstproject.pojo.MovieResponse
-import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -11,5 +11,5 @@ interface Api {
         @Query("api_key") apiKey: String?,
         @Query("language") lang: String?, @Query("sort_by") sortMethod: String?,
         @Query("page") page: String?
-    ): Call<MovieResponse?>?
+    ): Single<MovieResponse>   // Call<MovieResponse?>?
 }
